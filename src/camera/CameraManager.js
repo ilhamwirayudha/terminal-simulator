@@ -514,7 +514,13 @@ export class CameraManager {
       return 0.0;
     }
 
-    // 6. Mainland Access Highway Corridor (Z < -55)
+    // 6. Tol Romokalisari Elevated Flyover Descent Deck (Z in [-1108, -792], |X| in [3.8, 12.2])
+    if (z >= -1108 && z <= -792 && Math.abs(x) >= 3.8 && Math.abs(x) <= 12.2) {
+      const t = (z - (-1108)) / 316.0;
+      return 7.0 - t * (7.0 - 0.81);
+    }
+
+    // 7. Mainland Access Highway Corridor (Z < -55)
     // Highway road surface is at Y = 0.81m, terrain base is at 0.80m
     if (z < -55) {
       return 0.81;
@@ -556,10 +562,10 @@ export class CameraManager {
       this.camera.position.y = 500.0;
     }
 
-    // 4. World lateral perimeter bounds (X in [-360, +280], Z in [-850, +2400])
-    this.camera.position.x = Math.max(-360.0, Math.min(280.0, this.camera.position.x));
-    this.camera.position.z = Math.max(-850.0, Math.min(2400.0, this.camera.position.z));
-    this.controls.target.x = Math.max(-320.0, Math.min(240.0, this.controls.target.x));
-    this.controls.target.z = Math.max(-800.0, Math.min(2200.0, this.controls.target.z));
+    // 4. World lateral perimeter bounds (X in [-450, +350], Z in [-1350, +2400])
+    this.camera.position.x = Math.max(-450.0, Math.min(350.0, this.camera.position.x));
+    this.camera.position.z = Math.max(-1350.0, Math.min(2400.0, this.camera.position.z));
+    this.controls.target.x = Math.max(-400.0, Math.min(300.0, this.controls.target.x));
+    this.controls.target.z = Math.max(-1250.0, Math.min(2200.0, this.controls.target.z));
   }
 }

@@ -73,6 +73,67 @@
         </div>
       </div>
 
+      <!-- 4. Realtime GPS Coordinates & Teleport Panel (Top Right HUD) -->
+      <div id="panel-gps" class="gps-teleport-panel hud-panel">
+        <div class="panel-header-row">
+          <div class="gps-header-title">
+            <span class="pulse-dot"></span>
+            <span class="panel-card-title">📍 GPS TELEMETRI & TELEPORT</span>
+          </div>
+          <button id="btn-collapse-gps" class="btn-panel-toggle" type="button" title="Toggle GPS Panel">
+            <span class="toggle-icon">−</span>
+          </button>
+        </div>
+
+        <div id="gps-body" class="panel-body">
+          <!-- Live Coordinate Display -->
+          <div class="gps-display-box">
+            <div class="gps-field-group">
+              <span class="gps-field-label">WGS84 LATITUDE</span>
+              <span id="gps-lat-val" class="gps-field-value">-7.215112</span>
+            </div>
+            <div class="gps-field-group">
+              <span class="gps-field-label">WGS84 LONGITUDE</span>
+              <span id="gps-lon-val" class="gps-field-value">112.654118</span>
+            </div>
+          </div>
+
+          <!-- Secondary Telemetry (Metric Coordinates + Active Sector) -->
+          <div class="gps-telemetry-meta">
+            <div class="meta-item">
+              <span class="meta-label">Metrik (3D):</span>
+              <span id="gps-sim-val" class="meta-value">X: 0.0m | Z: -1108m | Y: 25.0m</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Sektor:</span>
+              <span id="gps-zone-val" class="meta-zone-badge">Gerbang Osowilangon</span>
+            </div>
+          </div>
+
+          <div class="gps-actions-row">
+            <button id="btn-copy-gps" class="btn-gps-copy" type="button" title="Salin Lat, Lon ke Clipboard">
+              📋 Salin Koordinat GPS
+            </button>
+          </div>
+
+          <!-- GPS Teleport Input Form -->
+          <div class="gps-teleport-section">
+            <label class="teleport-label" for="input-teleport-gps">Teleport ke Lat, Lon Google Maps:</label>
+            <div class="teleport-input-row">
+              <input 
+                id="input-teleport-gps" 
+                type="text" 
+                placeholder="-7.21512, 112.65411" 
+                autocomplete="off" 
+                spellcheck="false"
+              />
+              <button id="btn-teleport-gps" type="button">Go</button>
+            </div>
+            <div id="gps-teleport-feedback" class="teleport-feedback"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="bottom-bar">
         <!-- 3. Navigation Controls Hint Panel (Collapsible) -->
         <div id="panel-controls" class="controls-hint hud-panel">
@@ -94,6 +155,14 @@
             </ul>
             <div class="controls-actions" style="margin-top: 10px;">
               <button id="btn-reset-camera" class="btn-reset-camera" type="button">↺ Reset Posisi Kamera</button>
+            </div>
+            <div class="quick-camera-stations" style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+              <button class="btn-station btn-camera" data-station="OVERVIEW" type="button">🛰️ Overview</button>
+              <button class="btn-station btn-camera" data-station="OSOWILANGON_GATE" type="button">🚪 Osowilangon</button>
+              <button class="btn-station btn-camera" data-station="TOLL_FLYOVER" type="button">🛣️ Flyover Tol</button>
+              <button class="btn-station btn-camera" data-station="TOLL_MERGE" type="button">🔀 Titik Gabung</button>
+              <button class="btn-station btn-camera" data-station="CHECKPOINT" type="button">👮 Pos Keamanan</button>
+              <button class="btn-station btn-camera" data-station="CAUSEWAY" type="button">🌉 Jembatan Laut</button>
             </div>
           </div>
         </div>

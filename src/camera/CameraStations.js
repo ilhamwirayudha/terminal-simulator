@@ -16,17 +16,57 @@ export const CameraStations = {
   OVERVIEW: {
     id: 'OVERVIEW',
     name: 'Overview',
-    badge: '● TTL SATELLITE OVERVIEW (4 SEGMEN MAINLAND - KANTOR)',
-    position: new THREE.Vector3(-60, 360, 50),
-    target: new THREE.Vector3(0, 8.5, 280),
+    badge: '● TTL SATELLITE OVERVIEW (OSOWILANGON - TOL - KORIDOR DARATAN)',
+    position: new THREE.Vector3(-120, 480, -350),
+    target: new THREE.Vector3(0, 10, -150),
+    allowOrbit: true
+  },
+  OSOWILANGON_GATE: {
+    id: 'OSOWILANGON_GATE',
+    name: 'Gerbang Osowilangon',
+    badge: '● GERBANG OSOWILANGON & PANGKAL FLYOVER TOL (Z = -1108)',
+    position: new THREE.Vector3(38, 26, -1110),
+    target: new THREE.Vector3(0, 5, -1040),
+    allowOrbit: true
+  },
+  TOLL_FLYOVER: {
+    id: 'TOLL_FLYOVER',
+    name: 'Flyover Tol Romokalisari',
+    badge: '● FLYOVER TOL ROMOKALISARI: DEK LAYANG RAMP DOWN & UNDERPASS (Z = -950)',
+    position: new THREE.Vector3(32, 28, -950),
+    target: new THREE.Vector3(0, 5, -880),
+    allowOrbit: true
+  },
+  TOLL_DESCENT_VIEW: {
+    id: 'TOLL_DESCENT_VIEW',
+    name: 'Turunan Tol Ramp',
+    badge: '● TURUNAN FLYOVER TOL ROMOKALISARI MENUJU TITIK GABUNG',
+    position: new THREE.Vector3(-24, 22, -735),
+    target: new THREE.Vector3(0, 4, -860),
+    allowOrbit: true
+  },
+  TOLL_INTERCHANGE: {
+    id: 'TOLL_INTERCHANGE',
+    name: 'Flyover Tol Romokalisari',
+    badge: '● FLYOVER TOL ROMOKALISARI: DEK LAYANG RAMP DOWN & UNDERPASS (Z = -950)',
+    position: new THREE.Vector3(32, 28, -950),
+    target: new THREE.Vector3(0, 5, -880),
+    allowOrbit: true
+  },
+  TOLL_MERGE: {
+    id: 'TOLL_MERGE',
+    name: 'Titik Gabung Tol',
+    badge: '● TITIK PENGGABUNGAN (TOUCHDOWN) & PENYEMPITAN KORIDOR (Z = -792)',
+    position: new THREE.Vector3(28, 22, -810),
+    target: new THREE.Vector3(0, 2, -730),
     allowOrbit: true
   },
   HIGHWAY: {
     id: 'HIGHWAY',
     name: 'Jalan Daratan',
     badge: '● SEGMEN JALAN DARATAN: PERSPEKTIF PENGEMUDI DI ATAS ASPAL (Z = -320)',
-    position: new THREE.Vector3(13.8, 3.2, -320),
-    target: new THREE.Vector3(13.8, 2.0, -180),
+    position: new THREE.Vector3(14.0, 3.2, -320),
+    target: new THREE.Vector3(14.0, 2.0, -180),
     allowOrbit: true
   },
   CHECKPOINT: {

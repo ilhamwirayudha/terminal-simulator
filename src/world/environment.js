@@ -152,28 +152,27 @@ export function createEnvironment(scene) {
   // Lantai laut dan mudflat telah dihapus sesuai permintaan.
 
   // ----------------------------------------------------------------------------
-  // 2. MAINLAND BASE TERRAIN & FISHPONDS (TAMBAK) (Z = -280 to -55)
+  // 2. MAINLAND BASE TERRAIN & EXTENDED ACCESS CORRIDOR (Z = -1120 to -55)
   // ----------------------------------------------------------------------------
   const mainlandGroup = new THREE.Group();
   mainlandGroup.name = 'zone_a_mainland';
 
-  // Base terrain: diperkecil lebarnya dari 900 menjadi 90 (X in [-45, +45]) agar proporsional
-  const mainlandBase = new THREE.Mesh(new THREE.BoxGeometry(90, 2.0, 700), mainlandTerrainMat);
-  mainlandBase.position.set(0, -0.2, -376.5);
+  // Base terrain: diperpanjang hingga Z = -1200 untuk mencakup gerbang Jl. Raya Tambak Osowilangon
+  // Lebar 120m (X in [-60, +60]) agar mencakup koridor 48m dengan buffer tanah hijau luas
+  const mainlandBase = new THREE.Mesh(new THREE.BoxGeometry(120, 2.0, 1145), mainlandTerrainMat);
+  mainlandBase.position.set(0, -0.2, -627.5);
   mainlandBase.receiveShadow = true;
   mainlandGroup.add(mainlandBase);
 
-  // Kotak-kotak tambak (fish ponds) telah dihapus sesuai permintaan.
-
-  // Tanggul Pantai Kiri (X: -45 s/d -8.2)
-  const seawallLeft = new THREE.Mesh(new THREE.BoxGeometry(36.8, 2.0, 4.0), seawallMat);
-  seawallLeft.position.set(-26.6, -0.2, -55);
+  // Tanggul Pantai Kiri (X: -60 s/d -8.2)
+  const seawallLeft = new THREE.Mesh(new THREE.BoxGeometry(51.8, 2.0, 4.0), seawallMat);
+  seawallLeft.position.set(-34.1, -0.2, -55);
   seawallLeft.receiveShadow = true;
   mainlandGroup.add(seawallLeft);
 
-  // Tanggul Pantai Kanan (X: +8.2 s/d +45)
-  const seawallRight = new THREE.Mesh(new THREE.BoxGeometry(36.8, 2.0, 4.0), seawallMat);
-  seawallRight.position.set(26.6, -0.2, -55);
+  // Tanggul Pantai Kanan (X: +8.2 s/d +60)
+  const seawallRight = new THREE.Mesh(new THREE.BoxGeometry(51.8, 2.0, 4.0), seawallMat);
+  seawallRight.position.set(34.1, -0.2, -55);
   seawallRight.receiveShadow = true;
   mainlandGroup.add(seawallRight);
 
@@ -183,20 +182,21 @@ export function createEnvironment(scene) {
   bridgeAbutment.receiveShadow = true;
   mainlandGroup.add(bridgeAbutment);
 
-  // Deretan pohon di sepanjang koridor daratan (Z=-59 s/d Z=-690)
+  // Deretan pohon di sepanjang bahu luar jalan daratan (Z = -59 s/d Z = -1080)
   for (let x = -36; x <= 36; x += 12) {
     if (Math.abs(x) > 18) {
       addTree(mainlandGroup, x, 0.8, -59, 1.2);
-      // Pohon setiap ~55m sepanjang jalan
-      for (let z = -75; z >= -690; z -= 55) {
-        const jitter = (Math.sin(x * 0.3 + z * 0.1) * 4);
-        addTree(mainlandGroup, x + jitter, 0.8, z, 0.8 + Math.abs(Math.sin(z * 0.05)) * 0.4);
+      // Pohon setiap ~45m sepanjang koridor daratan
+      for (let z = -75; z >= -1080; z -= 45) {
+        const jitter = (Math.sin(x * 0.3 + z * 0.1) * 3.5);
+        addTree(mainlandGroup, x + jitter, 0.8, z, 0.85 + Math.abs(Math.sin(z * 0.05)) * 0.35);
       }
     }
   }
 
   // ----------------------------------------------------------------------------
   // 3. WIDE LANDSCAPED CENTRAL MEDIAN (WIDTH = 8.4m / X in [-4.2, +4.2])
+  // Pohon pemisah jalan masuk dan keluar dipertahankan menerus di sepanjang koridor
   // ----------------------------------------------------------------------------
   const addMedianIsland = (startZ, endZ) => {
     const l = Math.abs(endZ - startZ);
@@ -252,30 +252,112 @@ export function createEnvironment(scene) {
     grassCap2.position.set(0, 1.16, zEndCap);
     mainlandGroup.add(grassCap2);
 
-    for (let z = startZ + 6; z <= endZ - 6; z += 10) {
-      // Hilangkan pohon di area Pos Keamanan (Z = -170) & Bangunan Gardu (Z = -135 s/d -120)
-      if (z > -185 && z < -155) continue;
-      if (z > -140 && z < -120) continue;
+    // Deretan Pohon & Semak Pemisah Jalan Masuk/Keluar (Setiap 8m - 10m)
+    for (let z = startZ + 6; z <= endZ - 6; z += 9) {
+      // Sisihkan ruang terbuka di area Pos Keamanan (Z = -200 s/d -170)
+      if (z > -205 && z < -165) continue;
 
-      const offsetX = (Math.sin(z * 0.2) * 2.0);
-      addTree(mainlandGroup, offsetX, 1.15, z, 0.85 + Math.random() * 0.3);
-      addBush(mainlandGroup, -offsetX * 0.8, 1.15, z + 3, 1.1);
+      const offsetX = (Math.sin(z * 0.25) * 1.8);
+      addTree(mainlandGroup, offsetX, 1.15, z, 0.9 + Math.abs(Math.sin(z * 0.1)) * 0.3);
+      addBush(mainlandGroup, -offsetX * 0.8, 1.15, z + 2.5, 1.15);
     }
   };
 
-  // === 3 PULAU TAMAN MEDIAN TENGAH (SESUAI FOTO SATELIT APPLE MAPS) ===
-  // 1. Taman Segmen 1 (Jalan Masuk Panjang): Z = -700 s/d -410
-  addMedianIsland(-700, -410);
+  // Helper untuk pulau taman berukuran kustom
+  const addCustomMedianIsland = (startZ, endZ, width = 8.4, plantTrees = true) => {
+    const l = Math.abs(endZ - startZ);
+    const midZ = (startZ + endZ) / 2;
+    const capRadius = width / 2;
+    const rectLength = l - capRadius * 2;
+    const zStartCap = startZ + capRadius;
+    const zEndCap = endZ - capRadius;
 
-  // 2. Taman Segmen 2 (Jalan Menuju Pos Keamanan): Z = -380 s/d -170
-  addMedianIsland(-380, -170);
+    // 1. CURB
+    const curb = new THREE.Mesh(new THREE.BoxGeometry(width, 0.35, rectLength), curbConcreteMat);
+    curb.position.set(0, 0.95, midZ);
+    mainlandGroup.add(curb);
+    
+    const curbGeo = new THREE.CylinderGeometry(capRadius, capRadius, 0.35, 32);
+    const curbCap1 = new THREE.Mesh(curbGeo, curbConcreteMat);
+    curbCap1.position.set(0, 0.95, zStartCap);
+    mainlandGroup.add(curbCap1);
+    const curbCap2 = new THREE.Mesh(curbGeo, curbConcreteMat);
+    curbCap2.position.set(0, 0.95, zEndCap);
+    mainlandGroup.add(curbCap2);
 
-  // 3. Taman Segmen 3 (Taman Kompak Pembangkit Listrik / Gardu PLN TTL): Z = -140 s/d -106
-  addMedianIsland(-140, -106);
-  // Z = -106 to -53: Segmen 4 (Area Taper / Merge ke Jembatan, tanpa median taman)
+    // 2. SOIL
+    const soilW = width - 0.6;
+    const soilR = capRadius - 0.3;
+    const soil = new THREE.Mesh(new THREE.BoxGeometry(soilW, 0.38, rectLength), medianSoilMat);
+    soil.position.set(0, 0.96, midZ);
+    mainlandGroup.add(soil);
+    
+    const soilGeo = new THREE.CylinderGeometry(soilR, soilR, 0.38, 32);
+    const soilCap1 = new THREE.Mesh(soilGeo, medianSoilMat);
+    soilCap1.position.set(0, 0.96, zStartCap);
+    mainlandGroup.add(soilCap1);
+    const soilCap2 = new THREE.Mesh(soilGeo, medianSoilMat);
+    soilCap2.position.set(0, 0.96, zEndCap);
+    mainlandGroup.add(soilCap2);
+
+    // 3. GRASS
+    const grassW = width - 1.2;
+    const grassR = capRadius - 0.6;
+    const grass = new THREE.Mesh(new THREE.PlaneGeometry(grassW, rectLength), medianGrassMat);
+    grass.rotation.x = -Math.PI / 2;
+    grass.position.set(0, 1.16, midZ);
+    mainlandGroup.add(grass);
+    
+    const grassGeo = new THREE.CircleGeometry(grassR, 32);
+    const grassCap1 = new THREE.Mesh(grassGeo, medianGrassMat);
+    grassCap1.rotation.x = -Math.PI / 2;
+    grassCap1.position.set(0, 1.16, zStartCap);
+    mainlandGroup.add(grassCap1);
+    const grassCap2 = new THREE.Mesh(grassGeo, medianGrassMat);
+    grassCap2.rotation.x = -Math.PI / 2;
+    grassCap2.position.set(0, 1.16, zEndCap);
+    mainlandGroup.add(grassCap2);
+
+    // Deretan Pohon & Semak Pemisah Jalan Masuk/Keluar (Setiap 9m - 12m)
+    for (let z = startZ + 6; z <= endZ - 6; z += 10) {
+      if (z > -205 && z < -165) continue; // Area Pos Keamanan
+      const offsetX = (Math.sin(z * 0.25) * (capRadius * 0.45));
+      if (plantTrees) {
+        addTree(mainlandGroup, offsetX, 1.15, z, 0.85 + Math.abs(Math.sin(z * 0.1)) * 0.25);
+      }
+      addBush(mainlandGroup, -offsetX * 0.8, 1.15, z + 2.5, plantTrees ? 1.15 : 0.85);
+    }
+  };
+
+  // === PULAU TAMAN MEDIAN TENGAH BERPOHON RINDAH ===
+  // 1. Median Tengah di Celah Antar Flyover Tol (Z = -1104 s/d -796)
+  // Berada tepat di celah tengah X in [-3.5, +3.5] di antara kedua dek flyover layang kembar
+  // Bagian A (Sebelum Underpass Crossroad): Z = -1104 s/d -925 (Elevasi tinggi, aman untuk pohon kompak)
+  addCustomMedianIsland(-1104, -925, 7.0, true);
+
+  // Bagian B (Pasca Underpass Crossroad Menuju Touchdown Tol): Z = -890 s/d -796
+  // Flyover melandai rendah menuju tanah (Y = 2.5m ke 0.81m) -> HANYA SEMAK TAMAN / BUSHES HIJAU, BEBAS POHON TINGGI!
+  addCustomMedianIsland(-890, -796, 7.0, false);
+
+  // 2. Median Zona Taper & Merge Pasca Tol Touchdown: Z = -792 s/d -680
+  addCustomMedianIsland(-792, -680, 7.2, true);
+
+  // 3. Median Segmen Utama Menuju Terminal (Z in [-680, -80], Lebar 7.6m di Sumbu X in [-3.8, +3.8]):
+  // Bagian A (Pasca Merge Tol s/d Crossover 1): Z = -676 s/d -385
+  addCustomMedianIsland(-676, -385, 7.6);
+
+  // Bagian B (Crossover 1 s/d Pos Keamanan & Crossover 2): Z = -345 s/d -175
+  addCustomMedianIsland(-345, -175, 7.6);
+
+  // Bagian C (Pasca Pos Keamanan s/d Taper Jembatan Laut): Z = -135 s/d -108
+  addCustomMedianIsland(-135, -108, 7.6);
 
   // ----------------------------------------------------------------------------
   // 4. MULTI-VEHICLE FLEET ON 3 DEDICATED LANES
+  // Sesuai Geometri Simetris Presisi:
+  // - Akses Osowilangon: Masuk (X: +15, +19, +23) | Keluar (X: -15, -19, -23)
+  // - Flyover Tol Melayang Turun: Masuk (X: +8.0, Y: slope) | Keluar (X: -8.0, Y: slope)
+  // - Koridor Utama: Masuk (X: +6, +10, +14) | Keluar (X: -6, -10, -14)
   // ----------------------------------------------------------------------------
   const truckCabColors = [0xea580c, 0x0284c7, 0xdc2626, 0x16a34a, 0x9333ea, 0xca8a04];
   const containerColors = [0x0284c7, 0xdc2626, 0x059669, 0xd97706, 0x7c3aed, 0x2563eb, 0x475569];
@@ -285,9 +367,9 @@ export function createEnvironment(scene) {
   const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
 
   // A. TRUK KONTAINER
-  const addContainerTruck = (x, z, headingNorth = true, colorIdx = 0) => {
+  const addContainerTruck = (x, z, headingNorth = true, colorIdx = 0, y = 0.82) => {
     const truck = new THREE.Group();
-    truck.position.set(x, 0.82, z);
+    truck.position.set(x, y, z);
     truck.rotation.y = headingNorth ? 0 : Math.PI;
 
     const ch = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.4, 8.5), chassisMat);
@@ -323,9 +405,9 @@ export function createEnvironment(scene) {
   };
 
   // B. TRUK CURAH KERING
-  const addDryBulkTruck = (x, z, headingNorth = true, colorIdx = 0) => {
+  const addDryBulkTruck = (x, z, headingNorth = true, colorIdx = 0, y = 0.82) => {
     const truck = new THREE.Group();
-    truck.position.set(x, 0.82, z);
+    truck.position.set(x, y, z);
     truck.rotation.y = headingNorth ? 0 : Math.PI;
 
     const ch = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.4, 8.0), chassisMat);
@@ -361,9 +443,9 @@ export function createEnvironment(scene) {
   };
 
   // C. MOBIL & MOTOR
-  const addLightVehicle = (x, z, headingNorth = true, colorIdx = 0, isMotorcycle = false) => {
+  const addLightVehicle = (x, z, headingNorth = true, colorIdx = 0, isMotorcycle = false, y = 0.82) => {
     const veh = new THREE.Group();
-    veh.position.set(x, 0.82, z);
+    veh.position.set(x, y, z);
     veh.rotation.y = headingNorth ? 0 : Math.PI;
 
     if (isMotorcycle) {
@@ -389,92 +471,119 @@ export function createEnvironment(scene) {
     mainlandGroup.add(veh);
   };
 
+  // Helper elevasi dek flyover ramp down (Z = -1108 ke -792, Y = 7.0m ke 0.81m)
+  const getFlyoverRampY = (z) => {
+    const t = Math.max(0, Math.min(1, (z - (-1108)) / 316.0));
+    return 7.0 - t * (7.0 - 0.81);
+  };
+
+  // ------------------------------------------------------------
+  // DISTRIBUSI KENDARAAN SESUAI 3 LAJUR IDENTIK SIMETRIS
+  // ------------------------------------------------------------
+
+  // 1. SEGMEN 1: AKSES DARAT OSOWILANGON (Level Tanah Y = 0.82m)
+  // Inbound (+X): Kontainer (X = 23.0), Curah (X = 19.0), Mobil/Motor (X = 15.0)
+  addContainerTruck(23.0, -1070, true, 0);
+  addContainerTruck(23.0, -1000, true, 1);
+  addContainerTruck(23.0,  -870, true, 2);
+  addDryBulkTruck(19.0, -1045, true, 3);
+  addDryBulkTruck(19.0,  -960, true, 4);
+  addDryBulkTruck(19.0,  -840, true, 0);
+  addLightVehicle(15.0, -1060, true, 1, false);
+  addLightVehicle(15.0, -1015, true, 2, true);
+  addLightVehicle(15.0,  -940, true, 3, false);
+  addLightVehicle(15.0,  -860, true, 0, true);
+
+  // Outbound (-X): Mobil/Motor (X = -15.0), Curah (X = -19.0), Kontainer (X = -23.0)
+  addLightVehicle(-15.0, -1060, false, 2, false);
+  addLightVehicle(-15.0, -1020, false, 0, true);
+  addLightVehicle(-15.0,  -935, false, 1, false);
+  addLightVehicle(-15.0,  -850, false, 3, true);
+  addDryBulkTruck(-19.0, -1045, false, 4);
+  addDryBulkTruck(-19.0,  -955, false, 1);
+  addDryBulkTruck(-19.0,  -835, false, 2);
+  addContainerTruck(-23.0, -1070, false, 5);
+  addContainerTruck(-23.0,  -995, false, 6);
+  addContainerTruck(-23.0,  -865, false, 0);
+
+  // 2. SEGMEN 1 & 2: FLYOVER TOL ROMOKALISARI (Dek Melayang Melandai Turun: Z in [-1108, -792])
+  // Di atas dek layang: Inbound X = +8.0 (atau 6.5 / 9.5) | Outbound X = -8.0 (atau -6.5 / -9.5)
+  // Elevasi kendaraan dihitung presisi mengikuti elevasi ramp miring
+  const flyoverVehiclesIn = [
+    { z: -1050, type: 'container', c: 2, x: 9.2 },
+    { z:  -970, type: 'drybulk',   c: 0, x: 6.8 },
+    { z:  -890, type: 'car',       c: 3, x: 7.2, moto: false },
+    { z:  -820, type: 'container', c: 1, x: 9.2 }
+  ];
+  flyoverVehiclesIn.forEach(v => {
+    const y = getFlyoverRampY(v.z) + 0.02;
+    if (v.type === 'container') addContainerTruck(v.x, v.z, true, v.c, y);
+    else if (v.type === 'drybulk') addDryBulkTruck(v.x, v.z, true, v.c, y);
+    else addLightVehicle(v.x, v.z, true, v.c, v.moto, y);
+  });
+
+  const flyoverVehiclesOut = [
+    { z: -1040, type: 'container', c: 4, x: -9.2 },
+    { z:  -960, type: 'car',       c: 1, x: -7.2, moto: false },
+    { z:  -880, type: 'drybulk',   c: 2, x: -6.8 },
+    { z:  -810, type: 'container', c: 5, x: -9.2 }
+  ];
+  flyoverVehiclesOut.forEach(v => {
+    const y = getFlyoverRampY(v.z) + 0.02;
+    if (v.type === 'container') addContainerTruck(v.x, v.z, false, v.c, y);
+    else if (v.type === 'drybulk') addDryBulkTruck(v.x, v.z, false, v.c, y);
+    else addLightVehicle(v.x, v.z, false, v.c, v.moto, y);
+  });
+
+  // 3. SEGMEN 3: KORIDOR UTAMA MENUJU TERMINAL (Z in [-680, -80])
+  // Inbound (+X): Kontainer (X = 14.0), Curah (X = 10.0), Mobil/Motor (X = 6.0)
+  [[-640, 0], [-570, 1], [-500, 2], [-430, 3], [-360, 4], [-260, 5], [-240, 0], [-130, 1], [-85, 2]]
+    .forEach(([z, c]) => addContainerTruck(14.0, z, true, c));
+
+  [[-620, 2], [-540, 3], [-460, 0], [-390, 1], [-280, 2], [-220, 3], [-145, 4], [-105, 0]]
+    .forEach(([z, c]) => addDryBulkTruck(10.0, z, true, c));
+
+  [[-600, 1, false], [-520, 2, true], [-440, 0, false], [-370, 3, true], [-270, 1, false], [-230, 2, true], [-155, 0, false], [-95, 3, true]]
+    .forEach(([z, c, m]) => addLightVehicle(6.0, z, true, c, m));
+
+  // Outbound (-X): Mobil/Motor (X = -6.0), Curah (X = -10.0), Kontainer (X = -14.0)
+  [[-590, 0, false], [-510, 1, true], [-425, 2, false], [-350, 3, true], [-260, 0, false], [-190, 1, true], [-115, 2, false]]
+    .forEach(([z, c, m]) => addLightVehicle(-6.0, z, false, c, m));
+
+  [[-615, 4], [-535, 0], [-455, 1], [-380, 2], [-285, 3], [-210, 4], [-135, 0]]
+    .forEach(([z, c]) => addDryBulkTruck(-10.0, z, false, c));
+
+  [[-635, 5], [-565, 6], [-485, 0], [-415, 1], [-335, 2], [-250, 3], [-160, 4], [-80, 5]]
+    .forEach(([z, c]) => addContainerTruck(-14.0, z, false, c));
+
   // ----------------------------------------------------------------------------
-  // DEPLOY FLEETS TO THE 3 DEDICATED LANES
-  // +X = KIRI LAYAR = ENTRY (masuk ke kantor, headingNorth = true)
-  // -X = KANAN LAYAR = EXIT  (keluar dari kantor, headingNorth = false)
-  // ----------------------------------------------------------------------------
-
-  // 1. INBOUND / ENTRY (SISI KIRI LAYAR / X = +positif)
-  // LAJUR KONTAINER (X = +13.8) - menghadap ke kantor
-  addContainerTruck(13.8, -260, true, 0);
-  addContainerTruck(13.8, -245, true, 1);
-  addContainerTruck(13.8, -230, true, 2);
-  addContainerTruck(13.8, -160, true, 3);
-  addContainerTruck(13.8, -145, true, 4);
-  addContainerTruck(13.8, -130, true, 5);
-
-  // LAJUR CURAH KERING (X = +10.0) - menghadap ke kantor
-  addDryBulkTruck(10.0, -250, true, 0);
-  addDryBulkTruck(10.0, -220, true, 1);
-  addDryBulkTruck(10.0, -150, true, 2);
-  addDryBulkTruck(10.0, -120, true, 3);
-
-  // LAJUR MOBIL & MOTOR (X = +6.2) - menghadap ke kantor
-  addLightVehicle(6.2, -240, true, 0, false);
-  addLightVehicle(6.2, -225, true, 1, true);
-  addLightVehicle(6.2, -160, true, 2, false);
-  addLightVehicle(6.2, -135, true, 3, true);
-
-  // 2. OUTBOUND / EXIT (SISI KANAN LAYAR / X = -negatif)
-  // LAJUR KONTAINER (X = -13.8) - menghadap keluar
-  addContainerTruck(-13.8, -250, false, 6);
-  addContainerTruck(-13.8, -235, false, 0);
-
-  // LAJUR CURAH KERING (X = -10.0) - menghadap keluar
-  addDryBulkTruck(-10.0, -240, false, 4);
-
-  // LAJUR MOBIL & MOTOR (X = -6.2) - menghadap keluar
-  addLightVehicle(-6.2, -220, false, 1, false);
-
-  // === KENDARAAN TERDISTRIBUSI DI 4 SEGMEN (Z = -680 s/d -80) ===
-  // ENTRY Kontainer (X = +13.8)
-  [[-670,0],[-590,1],[-510,2],[-440,3],[-360,4],[-290,5],[-230,6],[-130,0],[-80,1]]
-    .forEach(([z,c]) => addContainerTruck(13.8, z, true, c));
-
-  // ENTRY Curah Kering (X = +10.0)
-  [[-650,0],[-570,1],[-480,2],[-340,3],[-270,4],[-210,2],[-120,0]]
-    .forEach(([z,c]) => addDryBulkTruck(10.0, z, true, c));
-
-  // ENTRY Motor/Mobil (X = +6.2)
-  [[-630,0,false],[-540,1,true],[-460,2,false],[-320,3,true],[-250,0,false],[-195,1,true],[-110,2,false]]
-    .forEach(([z,c,m]) => addLightVehicle(6.2, z, true, c, m));
-
-  // EXIT Kontainer (X = -13.8)
-  [[-660,0],[-580,6],[-490,1],[-350,0],[-280,2],[-220,1],[-130,6],[-80,0]]
-    .forEach(([z,c]) => addContainerTruck(-13.8, z, false, c));
-
-  // EXIT Curah Kering (X = -10.0)
-  [[-640,4],[-550,0],[-470,2],[-330,3],[-260,0],[-200,4],[-120,2]]
-    .forEach(([z,c]) => addDryBulkTruck(-10.0, z, false, c));
-
-      // EXIT Motor/Mobil (X = -6.2)
-  [[-620,0,false],[-530,1,true],[-450,2,false],[-310,0,true],[-240,1,false],[-175,2,true],[-100,0,false]]
-    .forEach(([z,c,m]) => addLightVehicle(-6.2, z, false, c, m));
-
-  // ----------------------------------------------------------------------------
-  // SEGMEN 2: SECURITY CHECKPOINT (POS KEAMANAN DENGAN KANOPI MENAUNGI LAJUR 3)
-  // Kanopi memanjang dari median (X = 0) ke arah Jalur Masuk mencakup Lajur 3 (X = 0 s/d +8.2)
+  // SEGMEN 2: SECURITY CHECKPOINT (POS KEAMANAN & KANOPI MENAUNGI 3 LAJUR MASUK)
+  // Kanopi memanjang dari median (X = 0) menaungi seluruh 3 lajur masuk (X = 0 s/d +16.5)
   // ----------------------------------------------------------------------------
   const secGroup = new THREE.Group();
   secGroup.position.set(0, 0.8, -186);
 
-  // 1. KANOPI ATAP PUTIH — Memanjang dari median (X = 0) menaungi Lajur 3 (X = +8.2)
-  // Lebar (X) = 8.2m, Panjang (Z) = 8.0m, Pusat di X = +4.1
-  const secRoof = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.5, 8.0), canopyMat);
-  secRoof.position.set(4.1, 5.2, 0);
+  // 1. KANOPI ATAP PUTIH MEGAH — Menaungi seluruh 3 lajur masuk (Lebar 16.8m, Panjang 10.0m)
+  const secRoof = new THREE.Mesh(new THREE.BoxGeometry(16.8, 0.55, 10.0), canopyMat);
+  secRoof.position.set(8.4, 5.6, 0);
   secRoof.castShadow = true;
   secGroup.add(secRoof);
 
-  // 2. 4 Tiang Baja Penyangga Kanopi
-  // 2 Tiang di sisi median (X = +0.3) dan 2 Tiang di batas lajur 3 / cuker (X = +8.0)
+  // Fascia Lis Biru Pelindo di Bibir Kanopi
+  const fasciaMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+  const secFascia = new THREE.Mesh(new THREE.BoxGeometry(16.9, 0.65, 10.1), fasciaMat);
+  secFascia.position.set(8.4, 5.75, 0);
+  secGroup.add(secFascia);
+
+  // 2. 6 Tiang Baja Berat Penyangga Kanopi 3 Lajur
+  // Sisi Median (X = 0.3), Sisi Pembatas Lajur (X = 8.1), Sisi Bahu Luar (X = 16.5)
   const pCols = [
-    { x: 0.3, z: -3.6 }, { x: 8.0, z: -3.6 },
-    { x: 0.3, z:  3.6 }, { x: 8.0, z:  3.6 }
+    { x: 0.3,  z: -4.4 }, { x: 8.1,  z: -4.4 }, { x: 16.5, z: -4.4 },
+    { x: 0.3,  z:  4.4 }, { x: 8.1,  z:  4.4 }, { x: 16.5, z:  4.4 }
   ];
   pCols.forEach(pc => {
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 5.2, 8), steelMaterial);
-    col.position.set(pc.x, 2.6, pc.z);
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.25, 5.6, 12), steelMaterial);
+    col.position.set(pc.x, 2.8, pc.z);
     col.castShadow = true;
     secGroup.add(col);
   });

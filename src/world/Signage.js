@@ -164,10 +164,10 @@ export function createHighwaySignage(scene) {
   //              -X = KANAN layar (sisi EXIT / KELUAR dari kantor)
   // ----------------------------------------------------------------------------
 
-  // 1. SISI KIRI LAYAR (X = +18.5): JALUR MASUK (ENTRY)
+  // 1. SISI KIRI LAYAR: JALUR MASUK (ENTRY)
   // ----------------------------------------------------------------------------
   const entryPositions = [
-    { x: 18.5, z: -670 }, // Pangkal Segmen 1 (Dekat Kota)
+    { x: 25.5, z: -670 }, // Pasca Simpang Tol (Bahu Rumput Luar)
     { x: 18.5, z: -280 }, // Pertengahan Segmen 2
     { x: 18.5, z: -70  }  // Segmen 4 (Dekat Jembatan Laut)
   ];
@@ -178,10 +178,10 @@ export function createHighwaySignage(scene) {
     signageGroup.add(sign);
   });
 
-  // 2. SISI KANAN LAYAR (X = -18.5): JALUR KELUAR (EXIT)
+  // 2. SISI KANAN LAYAR: JALUR KELUAR (EXIT)
   // ----------------------------------------------------------------------------
   const exitPositions = [
-    { x: -18.5, z: -670 }, // Pangkal Segmen 1 (Menuju Kota)
+    { x: -25.5, z: -670 }, // Pasca Simpang Tol (Bahu Rumput Luar)
     { x: -18.5, z: -280 }, // Pertengahan Segmen 2
     { x: -18.5, z: -70  }  // Segmen 4 (Dekat Jembatan Laut)
   ];

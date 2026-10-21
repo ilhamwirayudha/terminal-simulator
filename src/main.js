@@ -10,6 +10,7 @@ import { TruckManager } from './vehicles/TruckManager.js';
 import { CameraManager } from './camera/CameraManager.js';
 import { SelectionManager } from './simulation/SelectionManager.js';
 import { InformationPanel } from './ui/InformationPanel.js';
+import { simToGps, gpsToSim, formatGps } from './world/GeoProjection.js';
 
 /**
  * ==============================================================================
@@ -48,16 +49,18 @@ createHighwaySignage(scene);
 // 7. Create Sea Causeway Bridge & Administrative Office Complex
 createBridgeAndOffice(scene);
 
-// 6. Route Waypoints for Mainland (Spanning across 4 segments)
+// 6. Route Waypoints for Mainland Corridor (Osowilangon Z = -1080 to Bridge Abutment Z = -58)
 const terminalWaypoints = [
-  { x:  13.8, y: 0.81, z: -680 },
-  { x:  13.8, y: 0.81, z: -400 },
-  { x:  13.8, y: 0.81, z: -180 },
-  { x:  13.8, y: 0.81, z:  -58 },
-  { x: -13.8, y: 0.81, z:  -58 },
-  { x: -13.8, y: 0.81, z: -180 },
-  { x: -13.8, y: 0.81, z: -400 },
-  { x: -13.8, y: 0.81, z: -680 }
+  { x:  13.8, y: 0.81, z: -1080 },
+  { x:  13.8, y: 0.81, z:  -775 },
+  { x:  13.8, y: 0.81, z:  -400 },
+  { x:  13.8, y: 0.81, z:  -180 },
+  { x:  13.8, y: 0.81, z:   -58 },
+  { x: -13.8, y: 0.81, z:   -58 },
+  { x: -13.8, y: 0.81, z:  -180 },
+  { x: -13.8, y: 0.81, z:  -400 },
+  { x: -13.8, y: 0.81, z:  -775 },
+  { x: -13.8, y: 0.81, z: -1080 }
 ];
 
 // 7. Instantiate TruckManager (Fleet empty for layout development)
@@ -106,6 +109,18 @@ if (btnResetCamera) {
   });
 }
 
+// Quick Camera Station Switcher Buttons
+document.querySelectorAll('.btn-station').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const station = btn.getAttribute('data-station');
+    if (station && cameraManager) {
+      sessionStorage.removeItem('ttl_camera_state');
+      cameraManager.setStation(station);
+      updateCameraUI();
+    }
+  });
+});
+
 // Immediately sync UI with restored/current camera state
 updateCameraUI();
 
@@ -127,6 +142,131 @@ function setupPanelToggle(btnId, panelId) {
 setupPanelToggle('#btn-collapse-header', '#panel-header');
 setupPanelToggle('#btn-collapse-dashboard', '#panel-dashboard');
 setupPanelToggle('#btn-collapse-controls', '#panel-controls');
+setupPanelToggle('#btn-collapse-gps', '#panel-gps');
+
+// ----------------------------------------------------------------------------
+// Realtime GPS Telemetry & Teleport Controller
+// ----------------------------------------------------------------------------
+const elGpsLat = document.getElementById('gps-lat-val');
+const elGpsLon = document.getElementById('gps-lon-val');
+const elGpsSim = document.getElementById('gps-sim-val');
+const elGpsZone = document.getElementById('gps-zone-val');
+const btnCopyGps = document.getElementById('btn-copy-gps');
+const inputTeleport = document.getElementById('input-teleport-gps');
+const btnTeleport = document.getElementById('btn-teleport-gps');
+const elTeleportFeedback = document.getElementById('gps-teleport-feedback');
+
+let lastGpsLat = null;
+let lastGpsLon = null;
+let lastGpsUpdate = 0;
+
+function getZoneName(z) {
+  if (z <= -1020) return 'Akses Osowilangon';
+  if (z <= -792)  return 'Flyover Tol Romokalisari';
+  if (z <= -680)  return 'Merge Tol & Darat';
+  if (z <= -230)  return 'Koridor Utama 3 Lajur';
+  if (z <= -140)  return 'Pos Keamanan TTL';
+  if (z <= -55)   return 'Gardu PLN & Abutmen';
+  if (z < 700)    return 'Causeway 1 (Jembatan)';
+  return 'Pulau 1 Kompleks TTL';
+}
+
+function updateGpsTelemetry() {
+  const now = performance.now();
+  if (now - lastGpsUpdate < 80) return; // Throttled to ~12fps for performance
+  lastGpsUpdate = now;
+
+  const posX = camera.position.x;
+  const posY = camera.position.y;
+  const posZ = camera.position.z;
+
+  const { lat, lon, latStr, lonStr } = simToGps(posX, posZ);
+  lastGpsLat = lat;
+  lastGpsLon = lon;
+
+  if (elGpsLat) elGpsLat.textContent = latStr;
+  if (elGpsLon) elGpsLon.textContent = lonStr;
+  if (elGpsSim) {
+    elGpsSim.textContent = `X: ${posX.toFixed(1)}m | Z: ${posZ.toFixed(1)}m | Alt: ${posY.toFixed(1)}m`;
+  }
+  if (elGpsZone) {
+    elGpsZone.textContent = getZoneName(posZ);
+  }
+}
+
+// Copy Real GPS Coordinates to Clipboard
+if (btnCopyGps) {
+  btnCopyGps.addEventListener('click', async () => {
+    if (lastGpsLat !== null && lastGpsLon !== null) {
+      const gpsStr = formatGps(lastGpsLat, lastGpsLon);
+      try {
+        await navigator.clipboard.writeText(gpsStr);
+        btnCopyGps.textContent = '✅ Koordinat Tersalin!';
+        setTimeout(() => {
+          btnCopyGps.textContent = '📋 Salin Koordinat GPS';
+        }, 1600);
+      } catch (err) {
+        btnCopyGps.textContent = gpsStr;
+      }
+    }
+  });
+}
+
+// Teleport Camera to Given Real-World GPS Coordinates
+function handleTeleport() {
+  if (!inputTeleport) return;
+  const raw = inputTeleport.value.trim();
+  if (!raw) return;
+
+  const parts = raw.split(/[\s,]+/).map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+  if (parts.length < 2) {
+    if (elTeleportFeedback) {
+      elTeleportFeedback.className = 'teleport-feedback error';
+      elTeleportFeedback.textContent = '❌ Format salah. Contoh: -7.21512, 112.65411';
+    }
+    return;
+  }
+
+  const lat = parts[0];
+  const lon = parts[1];
+
+  if (lat < -10 || lat > -5 || lon < 110 || lon > 115) {
+    if (elTeleportFeedback) {
+      elTeleportFeedback.className = 'teleport-feedback error';
+      elTeleportFeedback.textContent = '❌ Di luar area Surabaya/TTL (-7.2°, 112.6°)';
+    }
+    return;
+  }
+
+  const { x, z } = gpsToSim(lat, lon);
+  const groundY = cameraManager.getGroundHeight(x, z);
+  const targetY = Math.max(groundY + 1.2, 1.8);
+  const camY = Math.max(targetY + 18.0, 22.0);
+
+  sessionStorage.removeItem('ttl_camera_state');
+  cameraManager.transitionTo(
+    new THREE.Vector3(x + 14.0, camY, z - 32.0),
+    new THREE.Vector3(x, targetY, z),
+    1.2
+  );
+
+  if (elTeleportFeedback) {
+    elTeleportFeedback.className = 'teleport-feedback success';
+    elTeleportFeedback.textContent = `➔ Teleport ke (${x.toFixed(1)}m, ${z.toFixed(1)}m)`;
+    setTimeout(() => {
+      elTeleportFeedback.textContent = '';
+    }, 3200);
+  }
+}
+
+if (btnTeleport) {
+  btnTeleport.addEventListener('click', handleTeleport);
+}
+if (inputTeleport) {
+  inputTeleport.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleTeleport();
+  });
+}
 
 const clock = new THREE.Clock();
 
@@ -140,6 +280,9 @@ function animate() {
 
   // Update Camera Manager
   cameraManager.update(deltaTime);
+
+  // Update Realtime GPS Coordinates & Telemetry
+  updateGpsTelemetry();
 
   // Update Operational Information Dashboard
   const activeSelected = selectionManager.getSelected() || fleetTrucks[0] || null;

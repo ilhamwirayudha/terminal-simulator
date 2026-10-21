@@ -610,3 +610,200 @@ html, body {
   font-size: 13px;
 }
 
+/* ==========================================================================
+   GPS Telemetry & Teleport Panel (Top Right HUD)
+   ========================================================================== */
+.gps-teleport-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  z-index: 25;
+  padding: 14px 16px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(15, 23, 42, 0.88);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.gps-teleport-panel.is-collapsed {
+  width: auto;
+  min-width: 210px;
+  padding: 10px 14px;
+}
+
+.gps-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseGlow 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.3); opacity: 0.4; }
+}
+
+.gps-display-box {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: rgba(2, 6, 23, 0.6);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gps-field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.gps-field-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.gps-field-value {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #38bdf8;
+  margin-top: 2px;
+}
+
+.gps-telemetry-meta {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meta-label {
+  color: #94a3b8;
+}
+
+.meta-value {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  color: #cbd5e1;
+  font-size: 10.5px;
+}
+
+.meta-zone-badge {
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.gps-actions-row {
+  margin-top: 8px;
+}
+
+.btn-gps-copy {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-gps-copy:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.gps-teleport-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.teleport-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.teleport-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.teleport-input-row input {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 6px;
+  color: #f8fafc;
+  outline: none;
+}
+
+.teleport-input-row input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+}
+
+.teleport-input-row button {
+  padding: 6px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.teleport-input-row button:hover {
+  background: #0369a1;
+}
+
+.teleport-feedback {
+  font-size: 10.5px;
+  margin-top: 4px;
+  min-height: 14px;
+  color: #94a3b8;
+}
+
+.teleport-feedback.success {
+  color: #34d399;
+}
+
+.teleport-feedback.error {
+  color: #f87171;
+}
+
