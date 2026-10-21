@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terminal Teluk Lamong (TTL) 3D Simulator</title>
+  </head>
+  <body>
+    <!-- The WebGL Canvas where Three.js will render the 3D scene -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Lightweight HUD Overlay with Collapsible Panels -->
+    <div id="ui-overlay">
+      <div class="top-bar">
+        <!-- 1. Header / Title Panel (Collapsible) -->
+        <div id="panel-header" class="header-card hud-panel">
+          <div class="panel-header-row">
+            <div class="header-titles">
+              <h1>Terminal Teluk Lamong (TTL)</h1>
+              <div class="badge">Pelindo Surabaya — Mainland Access Corridor</div>
+            </div>
+            <button id="btn-collapse-header" class="btn-panel-toggle" type="button" title="Toggle Title Panel">
+              <span class="toggle-icon">−</span>
+            </button>
+          </div>
+          <div id="header-body" class="panel-body">
+            <p class="header-subtext">3-Lane Highway: Lajur Kiri (Kontainer) | Lajur Tengah (Curah Kering) | Lajur Kanan (Motor & Mobil)</p>
+          </div>
+        </div>
+
+        <!-- 2. Operational Intelligence Dashboard Panel (Collapsible & Simplified) -->
+        <div id="panel-dashboard" class="dashboard-card hud-panel">
+          <div class="panel-header-row dashboard-header-bar">
+            <span class="panel-card-title">📊 TTL LAYOUT INTEL</span>
+            <button id="btn-collapse-dashboard" class="btn-panel-toggle" type="button" title="Toggle Dashboard Panel">
+              <span class="toggle-icon">−</span>
+            </button>
+          </div>
+
+          <div id="dashboard-body" class="panel-body">
+            <!-- Facility Location Intel -->
+            <div id="view-location-intel" class="tab-view">
+              <div class="intel-header">
+                <span id="loc-name" class="intel-id">MAINLAND ACCESS HIGHWAY (3 LAJUR KHUSUS)</span>
+                <span class="state-badge badge-clearance">3-LANE SYSTEM</span>
+              </div>
+
+              <div class="intel-grid">
+                <div class="intel-row">
+                  <span class="label">Lajur Kiri:</span>
+                  <span id="loc-type" class="value">Truk Kontainer (20ft / 40ft Chassis)</span>
+                </div>
+                <div class="intel-row">
+                  <span class="label">Lajur Tengah:</span>
+                  <span id="loc-operation" class="value">Truk Curah Kering (Dump Truck / Terpal)</span>
+                </div>
+                <div class="intel-row">
+                  <span class="label">Lajur Kanan:</span>
+                  <span id="loc-equipment" class="value">Mobil Operasional & Sepeda Motor</span>
+                </div>
+                <div class="intel-row">
+                  <span class="label">Security:</span>
+                  <span id="loc-active-truck" class="value">Pos Pemeriksaan 3 Lajur Masuk (Z = -80)</span>
+                </div>
+                <div class="intel-row">
+                  <span class="label">Median:</span>
+                  <span id="loc-next-event" class="value">Pulau Taman Hijau + 2 Titik Putar Balik</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <!-- 3. Navigation Controls Hint Panel (Collapsible) -->
+        <div id="panel-controls" class="controls-hint hud-panel">
+          <div class="panel-header-row">
+            <span class="panel-card-title">🎮 CONTROLS</span>
+            <button id="btn-collapse-controls" class="btn-panel-toggle" type="button" title="Toggle Controls Info">
+              <span class="toggle-icon">−</span>
+            </button>
+          </div>
+          <div id="controls-body" class="panel-body">
+            <ul>
+              <li><span>⌨️ W A S D:</span> Geser Maju / Kiri / Mundur / Kanan</li>
+              <li><span>⌨️ Q / E:</span> Kamera Naik / Turun</li>
+              <li><span>🔍 [ / ]:</span> Zoom In / Zoom Out</li>
+              <li><span>⚡ Shift:</span> Gerak Cepat (Sprint 3x)</li>
+              <li><span>🖱️ Left Drag:</span> Rotate / Orbit View</li>
+              <li><span>🖱️ Right Drag:</span> Pan Camera</li>
+              <li><span>⚙️ Scroll:</span> Zoom In / Out</li>
+            </ul>
+            <div class="controls-actions" style="margin-top: 10px;">
+              <button id="btn-reset-camera" class="btn-reset-camera" type="button">↺ Reset Posisi Kamera</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
