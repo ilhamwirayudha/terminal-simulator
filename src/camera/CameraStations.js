@@ -101,10 +101,10 @@ export const CameraStations = {
     target: new THREE.Vector3(3.8, 3.8, 180),
     allowOrbit: true
   },
-  PULAU_1: {
-    id: 'PULAU_1',
-    name: 'Pulau 1 Overview',
-    badge: '● PULAU 1: TERMINAL OPERATIONAL & ADMINISTRATIVE COMPLEX',
+  TERMINAL_OVERVIEW: {
+    id: 'TERMINAL_OVERVIEW',
+    name: 'Terminal Overview',
+    badge: '● TERMINAL TELUK LAMONG: OPERATIONAL & ADMINISTRATIVE COMPLEX',
     position: new THREE.Vector3(-80, 340, 750),
     target: new THREE.Vector3(-80, 2.2, 750),
     allowOrbit: true
@@ -135,26 +135,82 @@ export const CameraStations = {
   },
   ROAD_CORRIDOR: {
     id: 'ROAD_CORRIDOR',
-    name: 'Jalan Pulau 1',
-    badge: '● SEGMEN JALAN PULAU 1: PERSPEKTIF ASPAL 5-LAJUR & OCR (Z = 650)',
-    position: new THREE.Vector3(11.4, 3.5, 650),
-    target: new THREE.Vector3(11.4, 2.5, 780),
+    name: 'Jalan Pre-Gate (Aspal)',
+    badge: '● JALAN PRE-GATE: PERSPEKTIF PENGEMUDI DI LAJUR MASUK (Z = 650)',
+    position: new THREE.Vector3(7.3, 3.5, 650),
+    target: new THREE.Vector3(7.3, 2.5, 820),
+    allowOrbit: true
+  },
+  PRE_GATE_TOP_VIEW: {
+    id: 'PRE_GATE_TOP_VIEW',
+    name: 'Jalan Pre-Gate (Top View)',
+    badge: '● JALAN PRE-GATE: SATELLITE TOP-DOWN VIEW (Z = 625 s/d 1169)',
+    position: new THREE.Vector3(0, 160, 880),
+    target: new THREE.Vector3(5, 1.6, 920),
+    allowOrbit: true
+  },
+  AREA_A_TOP_VIEW: {
+    id: 'AREA_A_TOP_VIEW',
+    name: 'Area A (Top View Satelit)',
+    badge: '● AREA A: SATELLITE TOP-DOWN VIEW (SESUAI CITRA SATELIT REFERENSI)',
+    position: new THREE.Vector3(81.5, 230, 690.0),
+    target: new THREE.Vector3(81.5, 1.6, 690.0),
+    allowOrbit: true
+  },
+  AREA_A_OVERVIEW: {
+    id: 'AREA_A_OVERVIEW',
+    name: 'Area A (Overview)',
+    badge: '● AREA A: SABUK MANGROVE, YARD FASILITAS & KOMPLEKS BANGUNAN',
+    position: new THREE.Vector3(75, 75, 595),
+    target: new THREE.Vector3(82, 1.6, 690),
+    allowOrbit: true
+  },
+  AREA_A_IPAL: {
+    id: 'AREA_A_IPAL',
+    name: 'Area A: Yard Tengah',
+    badge: '● AREA A: HALAMAN / YARD TENGAH, SKID TANGKI & SHED UTILITAS',
+    position: new THREE.Vector3(18, 22, 695),
+    target: new THREE.Vector3(45, 2.5, 718),
+    allowOrbit: true
+  },
+  AREA_A_SHELTER_PARKIR: {
+    id: 'AREA_A_SHELTER_PARKIR',
+    name: 'Area A: Kompleks Bangunan',
+    badge: '● AREA A: KOMPLEKS BANGUNAN TIMUR LAUT (4 TINGKAT GEDUNG & GUDANG SENG)',
+    position: new THREE.Vector3(25, 30, 735),
+    target: new THREE.Vector3(62, 4.0, 760),
     allowOrbit: true
   },
   MAIN_GATE: {
     id: 'MAIN_GATE',
-    name: 'Main Gate',
-    badge: '● MAIN GATE & OCR TOLL INSPECTION CANOPY',
-    position: new THREE.Vector3(-10, 16, 830),
-    target: new THREE.Vector3(11.4, 6, 875),
+    name: 'Gerbang Pre-Gate',
+    badge: '● KANOPI GERBANG PRE-GATE & PEMERIKSAAN LAJUR MASUK (Z = 955)',
+    position: new THREE.Vector3(9.1, 16, 910),
+    target: new THREE.Vector3(9.1, 4.5, 960),
+    allowOrbit: true
+  },
+  DRIVER_WALKWAY: {
+    id: 'DRIVER_WALKWAY',
+    name: 'Jalur Supir ke Shelter',
+    badge: '● JALUR ASPAL PEJALAN KAKI SUPIR: WAITING AREA MENUJU SHELTER (SISI TENGGARA)',
+    position: new THREE.Vector3(12.0, 16.0, 835.0),
+    target: new THREE.Vector3(25.5, 2.0, 775.0),
     allowOrbit: true
   },
   WAITING_AREA: {
     id: 'WAITING_AREA',
-    name: 'Waiting Area',
-    badge: '● TRUCK BUFFER HOLDING YARD & CONTAINER STACKS',
-    position: new THREE.Vector3(55, 48, 830),
-    target: new THREE.Vector3(95, 5, 880),
+    name: 'CY & Waiting Area',
+    badge: '● CONTAINER YARD (TR 2 & TR 4) & TRUCK WAITING AREA (Z: 775 - 1034)',
+    position: new THREE.Vector3(25, 42, 850),
+    target: new THREE.Vector3(85, 4.0, 905),
+    allowOrbit: true
+  },
+  CY_WAITING_TOP_VIEW: {
+    id: 'CY_WAITING_TOP_VIEW',
+    name: 'Top View CY & Waiting Area',
+    badge: '● TOP-DOWN SATELIT: CY BLOK TR 2 & TR 4, WAITING AREA, MANGROVE',
+    position: new THREE.Vector3(75.0, 260.0, 895.0),
+    target: new THREE.Vector3(75.0, 1.6, 895.01),
     allowOrbit: true
   },
   SOUTH_TOP_VIEW: {

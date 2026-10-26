@@ -3,25 +3,21 @@ import './style.css';
 import { createScene } from './world/scene.js';
 import { setupLights } from './world/lights.js';
 import { createEnvironment } from './world/environment.js';
-import { createRoadNetwork } from './world/Road.js';
 import { createHighwaySignage } from './world/Signage.js';
-import { createBridgeAndOffice } from './world/BridgeAndOffice.js';
+import { createAreaJalan } from './terminal/jalan/index.js';
+import { createAreaA } from './terminal/areaA/index.js';
+import { createCyWaitingArea } from './terminal/cyWaitingArea/index.js';
 import { TruckManager } from './vehicles/TruckManager.js';
 import { CameraManager } from './camera/CameraManager.js';
 import { SelectionManager } from './simulation/SelectionManager.js';
 import { InformationPanel } from './ui/InformationPanel.js';
+import { CompassWidget } from './ui/CompassWidget.js';
 import { simToGps, gpsToSim, formatGps } from './world/GeoProjection.js';
 
 /**
  * ==============================================================================
- * MAIN APPLICATION ENTRY POINT (Terminal Teluk Lamong - Step 1A: Mainland to Bridge Start)
+ * MAIN APPLICATION ENTRY POINT (Terminal Teluk Lamong)
  * ==============================================================================
- *
- * Focusing purely on constructing and perfecting the Mainland access corridor:
- * - "mainland to bridge" access highway with Indonesian Left-Hand Traffic (LHT)
- * - "security checkpoint" post (median inspection booth, canopy, barrier arm)
- * - Aquaculture fish ponds (tambak), earthen dykes, and mangrove vegetation
- * - Bridge abutment & coastline transition to sea water
  */
 
 // 1. Find DOM elements for UI overlay
@@ -40,14 +36,17 @@ setupLights(scene);
 // 4. Create the Mainland Environment
 createEnvironment(scene);
 
-// 5. Create the Mainland Road Network
-createRoadNetwork(scene);
+// 5. Create Area Jalan (Osowilangun, Jembatan Laut, & Jalan Pre-Gate)
+createAreaJalan(scene);
 
-// 6. Create Highway Entry/Exit Signage
+// 6. Create Area A (Sisi Barat Laut: IPAL, Shelter, Parkir Motor, Mangrove)
+createAreaA(scene);
+
+// 7. Create Container Yard & Truck Waiting Area (Sisi Barat Laut: Z in [775, 1034])
+createCyWaitingArea(scene);
+
+// 7. Create Highway Entry/Exit Signage
 createHighwaySignage(scene);
-
-// 7. Create Sea Causeway Bridge & Administrative Office Complex
-createBridgeAndOffice(scene);
 
 // 6. Route Waypoints for Mainland Corridor (Osowilangon Z = -1080 to Bridge Abutment Z = -58)
 const terminalWaypoints = [
@@ -77,6 +76,9 @@ window.cameraManager = cameraManager;
 
 // 10. Initialize Operational InformationPanel Dashboard
 const infoPanel = new InformationPanel();
+
+// 11. Initialize Apple Maps / WGS84 Calibrated Compass Widget (Arah Mata Angin)
+const compassWidget = new CompassWidget(camera, cameraManager, controls);
 
 function updateCameraUI() {
   const isFollowing = cameraManager.getMode() === 'FOLLOW';
@@ -149,6 +151,7 @@ setupPanelToggle('#btn-collapse-gps', '#panel-gps');
 // ----------------------------------------------------------------------------
 const elGpsLat = document.getElementById('gps-lat-val');
 const elGpsLon = document.getElementById('gps-lon-val');
+const elGpsBearing = document.getElementById('gps-bearing-val');
 const elGpsSim = document.getElementById('gps-sim-val');
 const elGpsZone = document.getElementById('gps-zone-val');
 const btnCopyGps = document.getElementById('btn-copy-gps');
@@ -186,6 +189,10 @@ function updateGpsTelemetry() {
 
   if (elGpsLat) elGpsLat.textContent = latStr;
   if (elGpsLon) elGpsLon.textContent = lonStr;
+  if (elGpsBearing && compassWidget) {
+    const { bearingDeg, cardinal, cardinalFull } = compassWidget.getCurrentBearing();
+    elGpsBearing.textContent = `${bearingDeg.toFixed(1)}° ${cardinal} (${cardinalFull})`;
+  }
   if (elGpsSim) {
     elGpsSim.textContent = `X: ${posX.toFixed(1)}m | Z: ${posZ.toFixed(1)}m | Alt: ${posY.toFixed(1)}m`;
   }
@@ -283,6 +290,9 @@ function animate() {
 
   // Update Realtime GPS Coordinates & Telemetry
   updateGpsTelemetry();
+
+  // Update Compass Arah Mata Angin
+  compassWidget.update();
 
   // Update Operational Information Dashboard
   const activeSelected = selectionManager.getSelected() || fleetTrucks[0] || null;

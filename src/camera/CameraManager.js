@@ -219,6 +219,27 @@ export class CameraManager {
   }
 
   /**
+   * Smoothly transitions the camera to an arbitrary eye position and target lookAt.
+   * @param {THREE.Vector3} eyePosition
+   * @param {THREE.Vector3} lookAtTarget
+   * @param {number} [speed=3.5]
+   */
+  transitionTo(eyePosition, lookAtTarget, speed = 3.5) {
+    if (this.activeMode === 'FOLLOW') {
+      this.followCamera.stopFollow();
+    }
+
+    this.activeMode = 'STATION';
+    this.activeStationKey = 'CUSTOM';
+    this.isTransitioning = true;
+    this.controls.enabled = false;
+
+    this.targetPosition.copy(eyePosition);
+    this.targetLookAt.copy(lookAtTarget);
+    this.transitionSpeed = speed;
+  }
+
+  /**
    * Engages third-person follow tracking on the specified truck.
    * @param {Object} truck
    */
