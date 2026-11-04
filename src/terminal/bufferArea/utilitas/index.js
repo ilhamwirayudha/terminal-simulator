@@ -3,11 +3,11 @@ import {
   ZONES_CONFIG,
   COASTLINE_UV,
   uvToWorld
-} from './AreaAGeo.js';
-import { createIpalSubArea } from './IpalSubArea.js';
-import { createShelterSubArea } from './ShelterSubArea.js';
-import { createParkirMotorSubArea } from './ParkirMotorSubArea.js';
-import { createMangroveSubArea } from './MangroveSubArea.js';
+} from './GeoUtilitas.js';
+import { createSubAreaIpal } from './SubAreaIpal.js';
+import { createSubAreaShelter } from './SubAreaShelter.js';
+import { createSubAreaParkirMotor } from './SubAreaParkirMotor.js';
+import { createSubAreaMangrove } from './SubAreaMangrove.js';
 
 /**
  * ==============================================================================
@@ -29,9 +29,9 @@ import { createMangroveSubArea } from './MangroveSubArea.js';
  * 4. Utilitas & Penerangan (ParkirMotorSubArea.js)
  * 5. Sabuk Hutan Mangrove & Vegetasi Terkalibrasi (MangroveSubArea.js)
  */
-export function createAreaA(scene) {
-  const areaAGroup = new THREE.Group();
-  areaAGroup.name = 'area_a';
+export function createUtilitasArea(scene = null) {
+  const utilitasGroup = new THREE.Group();
+  utilitasGroup.name = 'subarea_utilitas_ipal_shelter';
 
   const yGround = 1.55;
 
@@ -74,7 +74,7 @@ export function createAreaA(scene) {
   groundMesh.position.set(0, yGround, 0);
   groundMesh.receiveShadow = true;
   groundMesh.name = 'area_a_ground_base';
-  areaAGroup.add(groundMesh);
+  utilitasGroup.add(groundMesh);
 
   // ----------------------------------------------------------------------------
   // 2. Render Tiap Zona Deklaratif sebagai ShapeGeometry dengan Offset-Y
@@ -103,45 +103,45 @@ export function createAreaA(scene) {
     mesh.position.set(0, yGround + (zone.yOffset || 0.015), 0);
     mesh.receiveShadow = true;
     mesh.name = zone.id;
-    areaAGroup.add(mesh);
+    utilitasGroup.add(mesh);
   });
 
   // ----------------------------------------------------------------------------
   // 3. Sub-Area Halaman / Yard Fasilitas Tengah
   // ----------------------------------------------------------------------------
-  const subYard = createIpalSubArea();
-  areaAGroup.add(subYard);
+  const subYard = createSubAreaIpal();
+  utilitasGroup.add(subYard);
 
   // ----------------------------------------------------------------------------
   // 4. Sub-Area Kompleks Bangunan Tepi Kanan (Timur Laut)
   // ----------------------------------------------------------------------------
-  const subKompleks = createShelterSubArea();
-  areaAGroup.add(subKompleks);
+  const subKompleks = createSubAreaShelter();
+  utilitasGroup.add(subKompleks);
 
   // ----------------------------------------------------------------------------
   // 5. Sub-Area Utilitas & Penerangan Perimeter
   // ----------------------------------------------------------------------------
-  const subParkir = createParkirMotorSubArea();
-  areaAGroup.add(subParkir);
+  const subParkir = createSubAreaParkirMotor();
+  utilitasGroup.add(subParkir);
 
   // ----------------------------------------------------------------------------
   // 6. Sub-Area Sabuk Hutan Mangrove & Vegetasi Terkalibrasi
   // ----------------------------------------------------------------------------
-  const subMangrove = createMangroveSubArea();
-  areaAGroup.add(subMangrove);
+  const subMangrove = createSubAreaMangrove();
+  utilitasGroup.add(subMangrove);
 
   // ----------------------------------------------------------------------------
   // 7. Daftarkan Seluruh Collider AABB Bangunan ke Scene UserData untuk Simulasi
   // ----------------------------------------------------------------------------
   if (scene) {
     scene.userData.colliders = scene.userData.colliders || [];
-    areaAGroup.traverse((obj) => {
+    utilitasGroup.traverse((obj) => {
       if (obj.userData && obj.userData.isCollider && obj.userData.aabb) {
         scene.userData.colliders.push(obj.userData.aabb);
       }
     });
-    scene.add(areaAGroup);
+    scene.add(utilitasGroup);
   }
 
-  return areaAGroup;
+  return utilitasGroup;
 }

@@ -76,7 +76,7 @@ export class SelectionManager {
         this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
         this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-        this._handleClick();
+        this._handleClick(e);
       }
     });
   }
@@ -107,7 +107,7 @@ export class SelectionManager {
    * Performs raycasting on pointer click to select or deselect truck.
    * @private
    */
-  _handleClick() {
+  _handleClick(e) {
     this.raycaster.setFromCamera(this.pointer, this.camera);
 
     const hit = this._raycastSelectables();

@@ -2,23 +2,28 @@
 
 Dokumen ini merupakan pedoman wajib dan aturan tetap bagi agen/pengembang dalam membangun dunia 3D simulator Terminal Teluk Lamong (TTL).
 
+> [!NOTE]
+> Roadmap fase, konvensi koordinat (lat/lon sebagai jangkar), dan daftar kode legacy ada di [prd.md](prd.md). Dokumen ini hanya mengatur aturan kode dan struktur folder.
+
 ---
 
 ## 1. Aturan Penamaan Wilayah (Kamus Resmi)
 
 > [!CAUTION]
 > **DILARANG MENGGUNAKAN ISTILAH "PULAU 1"**.
-> Istilah tersebut sudah resmi dihapus dari codebase dan dokumentasi.
+> Istilah tersebut sudah resmi dihapus dari codebase dan dokumentasi karena tidak sesuai dengan topografi nyata pulau reklamasi Terminal Teluk Lamong.
 
 * **Root Peta 3D:** Seluruh dunia 3D ini disebut sebagai **"Terminal"**.
-* **Pembagian Area (Level 1):**
-  * **Jalan** (Seluruh jaringan jalan, jembatan penghubung laut, dsb.)
-  * **Head Office** (Gedung kantor utama Graha Pelindo, plaza, parkiran, pos satpam kantor, dsb.)
-  * **Area A** (Zona utilitas, IPAL, gardu daya, tangki, dsb.)
-  * *Area lain sesuai pengembangan berikutnya (misal: Area B, Dermaga/Berth, dll.)*
-* **Tempat / Sub-Wilayah (Level 2):**
+* **Pembagian Area Makro (Level 1):**
+  * **Jalan** (`src/terminal/jalan/`: Seluruh jaringan jalan akses Osowilangon, interchange tol, jembatan laut penghubung / causeway, dan koridor jalan pre-gate).
+  * **Buffer Area / Zona Penyangga Barat** (`src/terminal/bufferArea/`: Kawasan penyangga pra-gerbang di sisi barat laut koridor jalan masuk, mencakup IPAL, shelter supir, parkir motor, waiting area truk petikemas Blok TR 2-4, waiting area truk curah kering Blok TR 5, dan sabuk hutan mangrove pesisir).
+  * **Gerbang & Kantor Utama** (`src/terminal/gateOffice/`: Rencana pengembangan, **Fase 2** untuk Main Gate (gerbang masuk menuju CY utama) dan jembatan timbang, Fase 6 untuk Gedung Graha Pelindo, masjid, dan plaza parkir kantor).
+  * **Container Yard Utama** (`src/terminal/containerYard/`: Rencana pengembangan, **Fase 2** - Lapangan penumpukan petikemas Blok 1 s/d Blok 4, rel Automated Stacking Cranes / ASC, reefer yard, dan empty yard).
+  * **Terminal Curah Kering** (`src/terminal/curahKering/`: Rencana pengembangan, Fase 4 - Kompleks silo gandum/kedelai, dome warehouse, dan jembatan konveyor layang).
+  * **Dermaga / Berth Lepas Pantai** (`src/terminal/dermaga/`: Rencana pengembangan, **Fase 3** - Jembatan trestle laut, dermaga petikemas & curah kering, dan Ship-to-Shore / STS cranes).
+* **Tempat / Sub-Wilayah (Level 2 & 3):**
   * Tempat-tempat spesifik di dalam masing-masing Area.
-  * Setiap tempat spesifik **wajib memiliki file terpisah** agar modular, mudah di-maintain, dan tidak menjadi file monolitik raksasa.
+  * Setiap tempat spesifik **wajib memiliki file terpisah** dengan penamaan Bahasa Indonesia (`SubArea...js` & `Geo...js`) agar modular, mudah di-maintain, dan tidak menjadi file monolitik raksasa.
 
 ---
 
@@ -43,33 +48,51 @@ Dokumen ini merupakan pedoman wajib dan aturan tetap bagi agen/pengembang dalam 
 
 ```text
 src/
-│
 ├── assets/                     <-- PUSTAKA ASSET (Dibuat dulu di sini)
 │   ├── materials/              # Shared PBR materials (aspal, beton, baja, kaca, rumput)
 │   ├── infrastructure/         # Lampu jalan, rambu, pagar BRC, pembatas beton (jersey barrier)
-│   ├── buildings/              # Pos satpam, modul gedung, gardu listrik
+│   ├── buildings/              # Pos satpam, shelter supir, modul gedung, gardu listrik
 │   ├── industrial/             # Tangki IPAL/BBM, rak pipa, genset
-│   └── nature/                 # Pohon palem, semak, vegetasi
+│   ├── nature/                 # Pohon palem, semak, vegetasi, mangrove
+│   ├── containers/             # (Rencana Fase 2) createContainer: standar dimensi kontainer tunggal
+│   └── vehicles/               # (Rencana Fase 2) createContainerTruck: standar dimensi truk tunggal
 │
 └── terminal/                   <-- SELURUH DUNIA 3D TERMINAL
-    ├── TerminalRoot.js         # Menggabungkan seluruh Area ke dalam scene utama
     │
-    ├── jalan/                  <-- Area: Jalan
+    ├── jalan/                  <-- Area: Jalan & Jembatan Laut
     │   ├── index.js            # Coordinator Area Jalan
-    │   ├── JembatanLaut.js     # Sub: Jembatan penghubung laut
-    │   └── KoridorDarat.js     # Sub: Jalan akses darat & putaran
+    │   ├── JalanAksesOsowilangun.js
+    │   ├── JembatanLaut.js
+    │   └── JalanPreGate.js
     │
-    ├── headOffice/             <-- Area: Head Office
-    │   ├── index.js            # Coordinator Area Head Office
-    │   ├── GedungUtama.js      # Sub: Gedung Graha Pelindo
-    │   ├── AreaParkir.js       # Sub: Lahan parkir mobil & motor
-    │   └── GerbangKantor.js    # Sub: Pos masuk kantor & drop-off
-    │
-    └── areaA/                  <-- Area: Area A
-        ├── index.js            # Coordinator Area A
-        ├── TempatUtilitasIpal.js # Sub: Fasilitas IPAL & pengolahan air
-        ├── TempatGarduListrik.js # Sub: Gardu induk PLN / Substation
-        └── TempatTangkiBBM.js  # Sub: Area tangki penyimpanan
+    └── bufferArea/             <-- Area: Zona Penyangga & Fasilitas Barat
+        ├── index.js            # Coordinator Utama Buffer Area
+        │
+        ├── utilitas/           # Sub-Klaster: Fasilitas Utilitas & Pendukung (Z: 604.5 - 775)
+        │   ├── index.js
+        │   ├── GeoUtilitas.js
+        │   ├── SubAreaIpal.js
+        │   ├── SubAreaShelter.js
+        │   ├── SubAreaParkirMotor.js
+        │   └── SubAreaMangrove.js
+        │
+        ├── waitingCY/          # Sub-Klaster: Waiting Area Truk Petikemas (Z: 775 - 1034)
+        │   ├── index.js
+        │   ├── GeoWaitingCY.js
+        │   ├── SubAreaAksesJalan.js
+        │   ├── SubAreaWaitingCY.js
+        │   ├── SubAreaBlokTR.js
+        │   ├── SubAreaJalurSupir.js
+        │   └── SubAreaMangrovePesisir.js
+        │
+        └── waitingCuker/       # Sub-Klaster: Waiting Area Truk Curah Kering (Z: 1034 - 1220+)
+            ├── index.js
+            ├── GeoCuker.js
+            ├── SubAreaPerkerasanCuker.js
+            ├── SubAreaMarkaCuker.js
+            ├── SubAreaBlokTR5.js
+            ├── SubAreaArmadaCuker.js
+            └── SubAreaFasilitasCuker.js
 ```
 
 ---
@@ -99,49 +122,66 @@ export function createStreetLight({ height = 8, poleColor = 0x94a3b8 } = {}) {
 }
 ```
 
-### B. Format File Tempat Spesifik (`src/terminal/areaA/TempatUtilitasIpal.js`)
+### B. Format File Tempat Spesifik (`src/terminal/bufferArea/utilitas/SubAreaIpal.js`)
 File tempat hanya mengimpor asset dan menempatkannya:
 
 ```javascript
-// Contoh: src/terminal/areaA/TempatUtilitasIpal.js
+// Contoh: src/terminal/bufferArea/utilitas/SubAreaIpal.js
 import * as THREE from 'three';
-import { createStorageTank } from '../../assets/industrial/createStorageTank.js';
-import { createSecurityPost } from '../../assets/buildings/createSecurityPost.js';
+import { uvToWorld, BUILDINGS_CONFIG } from './GeoUtilitas.js';
 
-export function createTempatUtilitasIpal() {
+export function createSubAreaIpal() {
   const group = new THREE.Group();
-  group.name = 'subarea_tempat_utilitas_ipal';
+  group.name = 'subarea_ipal_utilitas';
 
-  // Penempatan Asset 1
-  const tankA = createStorageTank({ radius: 3.5, height: 9 });
-  tankA.position.set(120, 0, -450);
-  group.add(tankA);
-
-  // Penempatan Asset 2
-  const posSatpam = createSecurityPost();
-  posSatpam.position.set(110, 0, -440);
-  group.add(posSatpam);
+  // Penempatan objek / aset
+  ...
 
   return group;
 }
 ```
 
-### C. Format Coordinator Area (`src/terminal/areaA/index.js`)
-Mengumpulkan semua tempat di dalam area tersebut:
+### C. Format Coordinator Sub-Klaster (`src/terminal/bufferArea/utilitas/index.js`)
+Mengumpulkan semua tempat di dalam sub-klaster:
 
 ```javascript
 import * as THREE from 'three';
-import { createTempatUtilitasIpal } from './TempatUtilitasIpal.js';
-import { createTempatGarduListrik } from './TempatGarduListrik.js';
+import { createSubAreaIpal } from './SubAreaIpal.js';
+import { createSubAreaShelter } from './SubAreaShelter.js';
 
-export function createAreaA() {
-  const areaGroup = new THREE.Group();
-  areaGroup.name = 'area_A';
+export function createUtilitasArea(scene = null) {
+  const group = new THREE.Group();
+  group.name = 'subarea_utilitas';
 
-  areaGroup.add(createTempatUtilitasIpal());
-  areaGroup.add(createTempatGarduListrik());
+  group.add(createSubAreaIpal());
+  group.add(createSubAreaShelter());
 
-  return areaGroup;
+  return group;
+}
+```
+
+### D. Format Coordinator Utama Area (`src/terminal/bufferArea/index.js`)
+Menggabungkan seluruh sub-klaster menjadi satu kesatuan:
+
+```javascript
+import * as THREE from 'three';
+import { createUtilitasArea } from './utilitas/index.js';
+import { createWaitingCYArea } from './waitingCY/index.js';
+import { createWaitingCukerArea } from './waitingCuker/index.js';
+
+export function createBufferArea(scene = null) {
+  const bufferGroup = new THREE.Group();
+  bufferGroup.name = 'area_buffer_barat';
+
+  bufferGroup.add(createUtilitasArea());
+  bufferGroup.add(createWaitingCYArea());
+  bufferGroup.add(createWaitingCukerArea());
+
+  if (scene) {
+    scene.add(bufferGroup);
+  }
+
+  return bufferGroup;
 }
 ```
 
@@ -152,5 +192,7 @@ export function createAreaA() {
 Sebelum menulis atau merefaktor kode:
 - [ ] Apakah ada penyebutan istilah lama yang dilarang ("Pulau 1")? Jika ada, ganti dengan konteks **Terminal** atau Area yang tepat.
 - [ ] Apakah objek 3D yang akan dibuat sudah ada di `src/assets/`? Jika belum, buat asetnya dulu di folder asset.
-- [ ] Apakah tempat spesifik dibuat dalam file terpisah di dalam foldernya masing-masing?
+- [ ] Apakah tempat spesifik dibuat dalam file terpisah dengan konvensi penamaan Bahasa Indonesia (`SubArea...js` & `Geo...js`)?
 - [ ] Apakah file area bertindak sebagai penggabung (*coordinator*) dari tempat-tempat di dalamnya?
+- [ ] Untuk area baru: apakah `Geo*.js` mencantumkan 2-4 titik sudut lat/lon sumbernya, dan batas UV diturunkan dari titik itu lewat `GeoProjection` (lihat prd.md bagian 3.2)?
+- [ ] Apakah kontainer dan truk memakai aset standar tunggal (`createContainer`, `createContainerTruck`) dan bukan dimensi yang ditulis ulang?

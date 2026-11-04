@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   uvToWorld,
   BUILDINGS_CONFIG
-} from './AreaAGeo.js';
+} from './GeoUtilitas.js';
 
 /**
  * ==============================================================================
@@ -21,7 +21,7 @@ import {
  * - "Lapangan hijau mirip tenis" (aeration basin lama) telah dihapus penuh karena tidak ada padanan di satelit.
  * - Setiap bangunan dilengkapi AABB Box collider sederhana untuk simulasi.
  */
-export function createIpalSubArea() {
+export function createSubAreaIpal() {
   const yardGroup = new THREE.Group();
   yardGroup.name = 'subarea_yard_tengah';
 

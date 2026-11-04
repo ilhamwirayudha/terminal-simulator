@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createMedianTree } from '../../assets/nature/createMedianTree.js';
+import { createMedianTree } from '../../../assets/nature/createMedianTree.js';
 
 /**
  * ==============================================================================
@@ -9,7 +9,7 @@ import { createMedianTree } from '../../assets/nature/createMedianTree.js';
  * Warna Aspal Disamakan 100% dengan Aspal CY (0x2e3338)
  * ==============================================================================
  */
-export function createDriverWalkwaySubArea() {
+export function createSubAreaJalurSupir() {
   const walkwayGroup = new THREE.Group();
   walkwayGroup.name = 'subarea_driver_walkway_shelter';
 
@@ -113,6 +113,9 @@ export function createDriverWalkwaySubArea() {
   const shrubMat = new THREE.MeshStandardMaterial({ color: 0x2d4f24, roughness: 0.95 });
 
   for (let z = 782.0; z <= 990.0; z += 18.0) {
+    // Hilangkan pohon di pilar sisi kiri (NW / zona pilar kanopi & portal pre-gate)
+    if (z >= 910.0 && z <= 995.0) continue;
+
     // Pohon peneduh
     const tree = createMedianTree({
       scale: 0.95 + Math.sin(z * 0.2) * 0.15,

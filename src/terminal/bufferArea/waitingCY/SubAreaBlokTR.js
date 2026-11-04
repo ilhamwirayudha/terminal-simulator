@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BLOCKS_CONFIG } from './CyWaitingGeo.js';
+import { BLOCKS_CONFIG } from './GeoWaitingCY.js';
 
 /**
  * ==============================================================================
@@ -12,7 +12,7 @@ import { BLOCKS_CONFIG } from './CyWaitingGeo.js';
  * - Menggunakan THREE.InstancedMesh dengan instanceColor (1 draw call, 60 FPS)
  * ==============================================================================
  */
-export function createContainerYardSubArea() {
+export function createSubAreaBlokTR() {
   const cyGroup = new THREE.Group();
   cyGroup.name = 'subarea_container_yard';
 

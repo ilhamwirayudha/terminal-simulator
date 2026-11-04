@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { createAccessRoadsSubArea } from './AccessRoadsSubArea.js';
-import { createWaitingAreaSubArea } from './WaitingAreaSubArea.js';
-import { createContainerYardSubArea } from './ContainerYardSubArea.js';
-import { createMangrovePesisirSubArea } from './MangrovePesisirSubArea.js';
-import { createDriverWalkwaySubArea } from './DriverWalkwaySubArea.js';
+import { createSubAreaAksesJalan } from './SubAreaAksesJalan.js';
+import { createSubAreaWaitingCY } from './SubAreaWaitingCY.js';
+import { createSubAreaBlokTR } from './SubAreaBlokTR.js';
+import { createSubAreaMangrovePesisir } from './SubAreaMangrovePesisir.js';
+import { createSubAreaJalurSupir } from './SubAreaJalurSupir.js';
 
 /**
  * ==============================================================================
@@ -19,28 +19,28 @@ import { createDriverWalkwaySubArea } from './DriverWalkwaySubArea.js';
  * 4. Sabuk Hutan Mangrove & Garis Pantai Pesisir (MangrovePesisirSubArea.js)
  * 5. Jalur Aspal Pejalan Kaki (Supir) Sisi Tenggara Menuju Shelter (DriverWalkwaySubArea.js)
  */
-export function createCyWaitingArea(scene) {
+export function createWaitingCYArea(scene = null) {
   const cyWaitingGroup = new THREE.Group();
   cyWaitingGroup.name = 'area_cy_waiting';
 
   // 1. Tambahkan Akses Jalan & Base Aspal
-  const subRoads = createAccessRoadsSubArea();
+  const subRoads = createSubAreaAksesJalan();
   cyWaitingGroup.add(subRoads);
 
   // 2. Tambahkan Truck Waiting Area (Slot A & B 66 Truk)
-  const subWaiting = createWaitingAreaSubArea();
+  const subWaiting = createSubAreaWaitingCY();
   cyWaitingGroup.add(subWaiting);
 
   // 3. Tambahkan Container Yard (Blok TR 2 & Blok TR 4)
-  const subCY = createContainerYardSubArea();
+  const subCY = createSubAreaBlokTR();
   cyWaitingGroup.add(subCY);
 
   // 4. Tambahkan Sabuk Mangrove Pesisir & Garis Pantai (Gambar 2)
-  const subMangrove = createMangrovePesisirSubArea();
+  const subMangrove = createSubAreaMangrovePesisir();
   cyWaitingGroup.add(subMangrove);
 
   // 5. Tambahkan Jalur Aspal Pejalan Kaki (Supir) Sisi Tenggara Menuju Shelter
-  const subWalkway = createDriverWalkwaySubArea();
+  const subWalkway = createSubAreaJalurSupir();
   cyWaitingGroup.add(subWalkway);
 
   // 5. Daftarkan Box Collider AABB ke scene.userData.colliders

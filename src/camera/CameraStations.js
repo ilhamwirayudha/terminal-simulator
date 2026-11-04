@@ -184,9 +184,9 @@ export const CameraStations = {
   MAIN_GATE: {
     id: 'MAIN_GATE',
     name: 'Gerbang Pre-Gate',
-    badge: '● KANOPI GERBANG PRE-GATE & PEMERIKSAAN LAJUR MASUK (Z = 955)',
-    position: new THREE.Vector3(9.1, 16, 910),
-    target: new THREE.Vector3(9.1, 4.5, 960),
+    badge: '● KANOPI GERBANG PRE-GATE, AUTO-GATE & DUAL PORTAL VGM (Z = 955)',
+    position: new THREE.Vector3(9.1, 14.0, 912.0),
+    target: new THREE.Vector3(9.1, 4.8, 955.0),
     allowOrbit: true
   },
   DRIVER_WALKWAY: {
@@ -211,6 +211,22 @@ export const CameraStations = {
     badge: '● TOP-DOWN SATELIT: CY BLOK TR 2 & TR 4, WAITING AREA, MANGROVE',
     position: new THREE.Vector3(75.0, 260.0, 895.0),
     target: new THREE.Vector3(75.0, 1.6, 895.01),
+    allowOrbit: true
+  },
+    CUKER_WAITING: {
+    id: 'CUKER_WAITING',
+    name: 'Waiting Area Cuker & TR 5',
+    badge: '● WAITING AREA CURAH KERING & CY BLOK TR 5',
+    position: new THREE.Vector3(12.0, 32.0, 1052.0),
+    target: new THREE.Vector3(75.0, 3.5, 1100.0),
+    allowOrbit: true
+  },
+  CUKER_TOP_VIEW: {
+    id: 'CUKER_TOP_VIEW',
+    name: 'Top View Cuker & TR 5',
+    badge: '● TOP-DOWN SATELIT: WAITING AREA CUKER & CY BLOK TR 5 (MANGROVE L-SHAPE)',
+    position: new THREE.Vector3(78.0, 230.0, 1095.0),
+    target: new THREE.Vector3(78.0, 1.6, 1095.01),
     allowOrbit: true
   },
   SOUTH_TOP_VIEW: {

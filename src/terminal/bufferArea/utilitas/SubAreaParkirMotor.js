@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { uvToWorld } from './AreaAGeo.js';
+import { uvToWorld } from './GeoUtilitas.js';
 
 /**
  * ==============================================================================
@@ -12,7 +12,7 @@ import { uvToWorld } from './AreaAGeo.js';
  * - Digantikan dengan fasilitas lampu penerangan tiang rendah dan pagar pengaman
  *   di sekeliling perkerasan yard tengah secara proporsional.
  */
-export function createParkirMotorSubArea() {
+export function createSubAreaParkirMotor() {
   const parkirGroup = new THREE.Group();
   parkirGroup.name = 'subarea_parkir_utilitas';
 

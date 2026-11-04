@@ -502,6 +502,14 @@ html, body {
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
+.badge-standing {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  cursor: pointer;
+}
+
 .badge-following {
   background: rgba(34, 197, 94, 0.2);
   color: #4ade80;

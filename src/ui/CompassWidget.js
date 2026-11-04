@@ -15,6 +15,9 @@ import * as THREE from 'three';
 // Scene azimuth angle where True North (0°) is located:
 export const NORTH_SCENE_ANGLE_DEG = 32.45;
 
+// Module-scoped reusable temporary vector to avoid per-frame GC churn
+const _tempDir = new THREE.Vector3();
+
 export class CompassWidget {
   /**
    * @param {THREE.PerspectiveCamera} camera
@@ -49,11 +52,10 @@ export class CompassWidget {
    * @returns {{bearingDeg: number, dialRotationDeg: number, cardinal: string, cardinalFull: string}}
    */
   getCurrentBearing() {
-    const dir = new THREE.Vector3();
-    this.camera.getWorldDirection(dir);
+    this.camera.getWorldDirection(_tempDir);
 
     // Direction on horizontal plane in Three.js coordinates
-    const angleInSceneRad = Math.atan2(dir.x, dir.z);
+    const angleInSceneRad = Math.atan2(_tempDir.x, _tempDir.z);
     const angleInSceneDeg = (angleInSceneRad * 180.0) / Math.PI;
 
     // Real-world bearing:
@@ -89,31 +91,10 @@ export class CompassWidget {
    * @param {number} desiredBearingDeg - Target azimuth (0° = True North)
    */
   alignToHeading(desiredBearingDeg) {
-    if (!this.controls || !this.cameraManager) return;
-
-    const target = this.controls.target;
-    const eye = this.camera.position;
-
-    // Calculate horizontal distance and elevation from target
-    const dx = eye.x - target.x;
-    const dz = eye.z - target.z;
-    const r = Math.max(Math.sqrt(dx * dx + dz * dz), 15.0);
-    const y = Math.max(eye.y, 8.0);
-
-    // sceneAngle = NORTH_SCENE_ANGLE_DEG - desiredBearingDeg
-    const desiredSceneAngleDeg = NORTH_SCENE_ANGLE_DEG - desiredBearingDeg;
-    const desiredSceneAngleRad = (desiredSceneAngleDeg * Math.PI) / 180.0;
-
-    // View direction vector from eye to target must point in desiredSceneAngle:
-    // dir = (sin(sceneAngle), cos(sceneAngle))
-    // eye = target - dir * r
-    const newEyeX = target.x - Math.sin(desiredSceneAngleRad) * r;
-    const newEyeZ = target.z - Math.cos(desiredSceneAngleRad) * r;
-
-    const newEyePos = new THREE.Vector3(newEyeX, y, newEyeZ);
-
-    sessionStorage.removeItem('ttl_camera_state');
-    this.cameraManager.transitionTo(newEyePos, target, 3.0);
+    if (!this.cameraManager) return;
+    if (typeof this.cameraManager.setHeading === 'function') {
+      this.cameraManager.setHeading(desiredBearingDeg);
+    }
   }
 
   /**

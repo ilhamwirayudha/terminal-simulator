@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CY_WAITING_BOUNDS, BLOCKS_CONFIG } from './CyWaitingGeo.js';
+import { CY_WAITING_BOUNDS, BLOCKS_CONFIG } from './GeoWaitingCY.js';
 
 /**
  * ==============================================================================
@@ -10,10 +10,10 @@ import { CY_WAITING_BOUNDS, BLOCKS_CONFIG } from './CyWaitingGeo.js';
  * - Jalur sirkulasi truk 6.1m di antara Waiting Area A dan B
  * - Jalur pemisah 7.3m di antara Container Yard dan Waiting Area
  * - Jalur akses masuk/keluar di sisi timur laut (Z: 1000m - 1034m) ke Jalan Pre-Gate
- * - Jalur akses di sisi timur CY TR 4
+ * - Jalur akses di sisi timur CY TR 2
  * ==============================================================================
  */
-export function createAccessRoadsSubArea() {
+export function createSubAreaAksesJalan() {
   const roadGroup = new THREE.Group();
   roadGroup.name = 'subarea_cy_waiting_roads';
 
@@ -48,7 +48,7 @@ export function createAccessRoadsSubArea() {
   shape.moveTo(13.3, -775.0);
   // Ke arah Barat Laut (NW) menyusuri batas belakang CY
   shape.lineTo(136.0, -775.0);
-  // Ke arah Timur Laut (NE) menyusuri batas belakang Blok TR 2
+  // Ke arah Timur Laut (NE) menyusuri batas belakang Blok TR 4
   shape.lineTo(136.0, -1034.4);
   // Ke arah Tenggara (SE) di ujung timur laut menyusuri kanstin jalan Pre-Gate X = 16.9
   shape.lineTo(16.9, -1034.4);

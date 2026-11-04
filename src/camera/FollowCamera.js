@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+// Module-scoped reusable temporary vectors to eliminate GC pauses during camera follow
+const _upAxis = new THREE.Vector3(0, 1, 0);
+const _rotatedOffset = new THREE.Vector3();
+const _desiredCamPos = new THREE.Vector3();
+const _desiredLookAt = new THREE.Vector3();
+
 /**
  * ==============================================================================
  * FollowCamera Controller (Prototype 06: Follow Camera System)
@@ -101,19 +107,18 @@ export class FollowCamera {
     const truckRotY = this.targetTruck.group.rotation.y;
 
     // 1. Calculate desired world position for camera behind the truck
-    const rotatedOffset = this.localOffset.clone();
-    rotatedOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), truckRotY);
-
-    const desiredCamPos = truckPos.clone().add(rotatedOffset);
+    _rotatedOffset.copy(this.localOffset).applyAxisAngle(_upAxis, truckRotY);
+    _desiredCamPos.copy(truckPos).add(_rotatedOffset);
 
     // 2. Smoothly interpolate (lerp) camera position
     const lerpFactor = Math.min(this.followSpeed * deltaTime, 1.0);
-    this.camera.position.lerp(desiredCamPos, lerpFactor);
+    this.camera.position.lerp(_desiredCamPos, lerpFactor);
 
     // 3. Smoothly interpolate look-at target (aimed slightly above cabin center)
-    const desiredLookAt = truckPos.clone().add(new THREE.Vector3(0, 2.2, 0));
+    _desiredLookAt.copy(truckPos);
+    _desiredLookAt.y += 2.2;
     const lookLerpFactor = Math.min(this.lookSpeed * deltaTime, 1.0);
-    this.currentLookAt.lerp(desiredLookAt, lookLerpFactor);
+    this.currentLookAt.lerp(_desiredLookAt, lookLerpFactor);
 
     // 4. Orient camera toward look-at target
     this.camera.lookAt(this.currentLookAt);

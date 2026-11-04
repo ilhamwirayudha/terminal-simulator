@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BLOCKS_CONFIG } from './CyWaitingGeo.js';
+import { BLOCKS_CONFIG } from './GeoWaitingCY.js';
 
 /**
  * ==============================================================================
@@ -12,7 +12,7 @@ import { BLOCKS_CONFIG } from './CyWaitingGeo.js';
  *   Variasi: Kosong (chassis), 1x20ft, 2x20ft, dan 1x40ft
  * ==============================================================================
  */
-export function createWaitingAreaSubArea() {
+export function createSubAreaWaitingCY() {
   const waGroup = new THREE.Group();
   waGroup.name = 'subarea_truck_waiting_area';
 

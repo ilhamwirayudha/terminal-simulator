@@ -125,3 +125,14 @@ export const yellowLineMat = new THREE.MeshBasicMaterial({
   side: THREE.DoubleSide,
   name: 'mat_marka_kuning'
 });
+
+
+// 6. Air Laut Teluk (Shared)
+export const seaWaterMat = new THREE.MeshStandardMaterial({
+  color: 0x6e7d73,
+  roughness: 0.28,
+  metalness: 0.18,
+  transparent: true,
+  opacity: 0.94,
+  name: 'mat_sea_water'
+});

@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 /**
  * ==============================================================================
- * Scene Setup (Mainland Highway Corridor)
+ * Scene Setup (Mainland Highway Corridor - Pure First-Person POV)
  * ==============================================================================
  */
 export function createScene(canvas) {
@@ -16,7 +16,7 @@ export function createScene(canvas) {
   const camera = new THREE.PerspectiveCamera(
     45,
     window.innerWidth / window.innerHeight,
-    1.5,
+    0.05, // 5cm near plane: prevents surface clipping
     3500
   );
   camera.position.set(13.8, 3.2, -320);
@@ -38,14 +38,12 @@ export function createScene(canvas) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
 
-  // 4. OrbitControls with surface protection constraints
+  // 4. OrbitControls kept solely for target synchronization (Mouse rotation disabled for Pure First-Person POV)
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.minDistance = 3.0; // Prevents dollying/zooming into or through ground
-  controls.maxDistance = 1600;
-  controls.minPolarAngle = 0.05; // Prevents gimbal lock when looking straight down
-  controls.maxPolarAngle = Math.PI / 2 - 0.06; // Hard limit: strictly prevents orbiting below horizon
+  controls.enableRotate = false; // Disabled: Camera rotates on its own eye axis (Pure First-Person Look)
+  controls.enablePan = false;    // Disabled: WASD handles 3D translation
+  controls.enableZoom = false;   // Disabled: CameraManager handles FOV zoom
+  controls.enableDamping = false;
   controls.target.set(13.8, 2.0, -180);
 
   // 5. Responsive Resize Handling

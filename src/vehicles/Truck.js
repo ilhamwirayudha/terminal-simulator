@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { TruckStateMachine, TruckState } from '../simulation/StateMachine.js';
 
+// Module-scoped reusable temporary vectors to prevent per-frame GC churn
+const _tempTargetPos = new THREE.Vector3();
+const _tempMoveDirection = new THREE.Vector3();
+
 /**
  * ==============================================================================
  * Truck Class (Indonesian Right-Hand Drive / Setir Kanan Model)
@@ -302,9 +306,9 @@ export class Truck {
 
     if (this.isMoving && this.speed > 0) {
       const targetWaypoint = this.route[this.currentWaypointIndex];
-      const targetPos = new THREE.Vector3(targetWaypoint.x, targetWaypoint.y, targetWaypoint.z);
+      _tempTargetPos.set(targetWaypoint.x, targetWaypoint.y, targetWaypoint.z);
       const currentPos = this.group.position;
-      const distance = currentPos.distanceTo(targetPos);
+      const distance = currentPos.distanceTo(_tempTargetPos);
 
       if (distance < this.arrivalThreshold) {
         this.currentWaypointIndex++;
@@ -318,12 +322,12 @@ export class Truck {
         }
       }
 
-      const moveDirection = new THREE.Vector3().subVectors(targetPos, currentPos).normalize();
+      _tempMoveDirection.subVectors(_tempTargetPos, currentPos).normalize();
       const moveDistance = this.speed * deltaTime;
-      this.group.position.addScaledVector(moveDirection, moveDistance);
+      this.group.position.addScaledVector(_tempMoveDirection, moveDistance);
 
-      if (moveDirection.lengthSq() > 0.0001) {
-        const targetRotationY = Math.atan2(moveDirection.x, moveDirection.z);
+      if (_tempMoveDirection.lengthSq() > 0.0001) {
+        const targetRotationY = Math.atan2(_tempMoveDirection.x, _tempMoveDirection.z);
         let currentRotationY = this.group.rotation.y;
         let deltaRotation = targetRotationY - currentRotationY;
         while (deltaRotation > Math.PI) deltaRotation -= Math.PI * 2;

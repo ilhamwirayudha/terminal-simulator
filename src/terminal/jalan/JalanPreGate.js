@@ -10,6 +10,7 @@ import {
 import { createMedianIsland } from '../../assets/infrastructure/createMedianIsland.js';
 import { createMedianTree } from '../../assets/nature/createMedianTree.js';
 import { createPreGateCanopy } from '../../assets/buildings/createPreGateCanopy.js';
+import { createPreGatePortal } from '../../assets/infrastructure/createPreGatePortal.js';
 
 /**
  * ==============================================================================
@@ -45,6 +46,19 @@ export function createJalanPreGate() {
   preGateGroup.name = 'sub_jalan_pre_gate';
 
   const yRoad = 1.631;
+
+  // Batched Dashed Lane Markings (1 Draw Call for 60 FPS)
+  const preGateDashedPositions = [];
+  const addDashQuad = (lx, centerZ, yPos = yRoad + 0.006, width = 0.2, length = 3.5) => {
+    const hw = width / 2;
+    const hl = length / 2;
+    const x1 = lx - hw, x2 = lx + hw;
+    const z1 = centerZ - hl, z2 = centerZ + hl;
+    preGateDashedPositions.push(
+      x1, yPos, z1,  x2, yPos, z1,  x2, yPos, z2,
+      x1, yPos, z1,  x2, yPos, z2,  x1, yPos, z2
+    );
+  };
 
   // ----------------------------------------------------------------------------
   // Vector Highway Arrow Builder (Putih)
@@ -212,10 +226,7 @@ export function createJalanPreGate() {
   // Marka Garis Putus-putus Segmen 1 (+4.9m & +8.5m)
   [4.9, 8.5].forEach((lx) => {
     for (let z = 660; z < 775; z += 9.0) {
-      const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 3.5), whiteLineMat);
-      dash.rotation.x = -Math.PI / 2;
-      dash.position.set(lx, yRoad + 0.006, z + 1.75);
-      preGateGroup.add(dash);
+      addDashQuad(lx, z + 1.75);
     }
   });
 
@@ -298,19 +309,20 @@ export function createJalanPreGate() {
   // Marka Garis Putus-putus 4 Lajur Masuk (+4.9m, +8.5m, +12.1m)
   [4.9, 8.5, 12.1].forEach((lx) => {
     for (let z = 812; z < 1168; z += 9.0) {
-      if ((z >= 940 && z <= 972) || (z >= 1005 && z <= 1035)) continue; // Hindari kanopi & bukaan
-      const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 3.5), whiteLineMat);
-      dash.rotation.x = -Math.PI / 2;
-      dash.position.set(lx, yRoad + 0.006, z + 1.75);
-      preGateGroup.add(dash);
+      if ((z >= 934 && z <= 976) || (z >= 1005 && z <= 1035)) continue; // Hindari portal, kanopi & bukaan
+      addDashQuad(lx, z + 1.75);
     }
   });
 
-  // Garis Solid Tepi Segmen 2 (Kiri Luar) - Dibuka di Z: 1008.0 s/d 1034.4 sebagai Jalur Masuk Waiting Area
+  // Garis Solid Tepi Segmen 2 (Kiri Luar) - Dibuka di:
+  // 1. Z: 1008.0 s/d 1034.4 (Bukaan Akses Masuk CY Waiting Area)
+  // 2. Z: 1050.0 s/d 1074.0 (Bukaan Akses Keluar-Masuk Waiting Area Cuker / Zero Garis Putih)
   const zOpenStart = 1008.0;
   const zOpenEnd = 1034.4;
+  const zCukerOpenStart = 1050.0;
+  const zCukerOpenEnd = 1074.0;
 
-  // Bagian 1: Sebelum bukaan akses masuk (Z: 805.0 s/d 1008.0)
+  // Bagian 1: Sebelum bukaan akses CY Waiting Area (Z: 805.0 s/d 1008.0)
   const seg2InOuterLen1 = zOpenStart - 805.0; // 203.0m
   const seg2InOuterMidZ1 = (805.0 + zOpenStart) / 2;
   const seg2InOuter1 = new THREE.Mesh(new THREE.PlaneGeometry(0.24, seg2InOuterLen1), whiteLineMat);
@@ -318,29 +330,44 @@ export function createJalanPreGate() {
   seg2InOuter1.position.set(16.7, yRoad + 0.006, seg2InOuterMidZ1);
   preGateGroup.add(seg2InOuter1);
 
-  // Bagian 2: Setelah bukaan akses masuk (Z: 1034.4 s/d 1168.0)
-  const seg2InOuterLen2 = 1168.0 - zOpenEnd; // 133.6m
-  const seg2InOuterMidZ2 = (zOpenEnd + 1168.0) / 2;
-  const seg2InOuter2 = new THREE.Mesh(new THREE.PlaneGeometry(0.24, seg2InOuterLen2), whiteLineMat);
-  seg2InOuter2.rotation.x = -Math.PI / 2;
-  seg2InOuter2.position.set(16.7, yRoad + 0.006, seg2InOuterMidZ2);
-  preGateGroup.add(seg2InOuter2);
+  // Bagian 2A: Antara bukaan CY Waiting Area dan bukaan Cuker (Z: 1034.4 s/d 1050.0)
+  const seg2InOuterLen2A = zCukerOpenStart - zOpenEnd; // 15.6m
+  const seg2InOuterMidZ2A = (zOpenEnd + zCukerOpenStart) / 2;
+  const seg2InOuter2A = new THREE.Mesh(new THREE.PlaneGeometry(0.24, seg2InOuterLen2A), whiteLineMat);
+  seg2InOuter2A.rotation.x = -Math.PI / 2;
+  seg2InOuter2A.position.set(16.7, yRoad + 0.006, seg2InOuterMidZ2A);
+  preGateGroup.add(seg2InOuter2A);
+
+  // (CATATAN: Z in [1050.0, 1074.0] DIKOSONGKAN TOTAL DARI GARIS PUTIH & KANSTIN SEBAGAI AKSES TRUK CUKER)
+
+  // Bagian 2B: Setelah bukaan Cuker (Z: 1074.0 s/d 1168.0)
+  const seg2InOuterLen2B = 1168.0 - zCukerOpenEnd; // 94.0m
+  const seg2InOuterMidZ2B = (zCukerOpenEnd + 1168.0) / 2;
+  const seg2InOuter2B = new THREE.Mesh(new THREE.PlaneGeometry(0.24, seg2InOuterLen2B), whiteLineMat);
+  seg2InOuter2B.rotation.x = -Math.PI / 2;
+  seg2InOuter2B.position.set(16.7, yRoad + 0.006, seg2InOuterMidZ2B);
+  preGateGroup.add(seg2InOuter2B);
 
   const seg2InInner = new THREE.Mesh(new THREE.PlaneGeometry(0.22, seg2Len), yellowLineMat);
   seg2InInner.rotation.x = -Math.PI / 2;
   seg2InInner.position.set(1.4, yRoad + 0.006, seg2MidZ);
   preGateGroup.add(seg2InInner);
 
-  // Kanstin Tepi Luar Kiri Segmen 2 - Dibuka di Z: 1008.0 s/d 1034.4
+  // Kanstin Tepi Luar Kiri Segmen 2 (Dibuka di Z: 1008-1034.4 dan Z: 1050-1074)
   const seg2Curb1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, seg2InOuterLen1), curbHazardWhiteMat);
   seg2Curb1.position.set(16.9, yRoad + 0.11, seg2InOuterMidZ1);
   seg2Curb1.castShadow = true;
   preGateGroup.add(seg2Curb1);
 
-  const seg2Curb2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, seg2InOuterLen2), curbHazardWhiteMat);
-  seg2Curb2.position.set(16.9, yRoad + 0.11, seg2InOuterMidZ2);
-  seg2Curb2.castShadow = true;
-  preGateGroup.add(seg2Curb2);
+  const seg2Curb2A = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, seg2InOuterLen2A), curbHazardWhiteMat);
+  seg2Curb2A.position.set(16.9, yRoad + 0.11, seg2InOuterMidZ2A);
+  seg2Curb2A.castShadow = true;
+  preGateGroup.add(seg2Curb2A);
+
+  const seg2Curb2B = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, seg2InOuterLen2B), curbHazardWhiteMat);
+  seg2Curb2B.position.set(16.9, yRoad + 0.11, seg2InOuterMidZ2B);
+  seg2Curb2B.castShadow = true;
+  preGateGroup.add(seg2Curb2B);
 
   // Radius Corner Kanstin Penutup Sudut Bukaan Masuk Waiting Area (Corner Returns)
   const cornerCurbGeo = new THREE.BoxGeometry(1.6, 0.22, 0.35);
@@ -352,6 +379,14 @@ export function createJalanPreGate() {
   cornerCurb2.position.set(16.9 + 0.8, yRoad + 0.11, zOpenEnd);
   preGateGroup.add(cornerCurb2);
 
+  const cornerCurbCuker1 = new THREE.Mesh(cornerCurbGeo, curbHazardWhiteMat);
+  cornerCurbCuker1.position.set(16.9 + 0.8, yRoad + 0.11, zCukerOpenStart);
+  preGateGroup.add(cornerCurbCuker1);
+
+  const cornerCurbCuker2 = new THREE.Mesh(cornerCurbGeo, curbHazardWhiteMat);
+  cornerCurbCuker2.position.set(16.9 + 0.8, yRoad + 0.11, zCukerOpenEnd);
+  preGateGroup.add(cornerCurbCuker2);
+
   // Panah Marka Jalan 4 Lajur Segmen 2 (Masuk: Forward / +Z)
   [830, 890, 1000, 1080, 1150].forEach((z) => {
     addRoadArrow(3.1, z, true);  // Lajur 4: Delivery
@@ -361,17 +396,45 @@ export function createJalanPreGate() {
   });
 
   // ----------------------------------------------------------------------------
-  // KANOPI GERBANG PRE-GATE (Asset Reusable createPreGateCanopy)
-  // Berada di Z = 955 menaungi 4 lajur masuk sebagai patokan nyata (Tampak di Gambar 2)
+  // KANOPI GERBANG PRE-GATE & DUAL PORTAL AUTO-GATE VGM
+  // Berada di Z = 955 terkalibrasi GPS WGS84 (P1-P4: Panjang 24.8m x Lebar 18.0m)
+  // Ketinggian: Klirens bawah 6.8m & Puncak lengkung atap 9.6m proporsional
+  // Pilar median di X = 0.0m (di sumbu tengah median, zero-encroachment ke outbound)
+  // Pilar luar di X = 18.0m (di atas bahu jalan luar berkanstin)
+  // Dilengkapi Portal Masuk (Z = 938m), Portal Keluar (Z = 972m), & Timbangan WIM (Lajur 2,3,4)
   // ----------------------------------------------------------------------------
   const preGateCanopy = createPreGateCanopy({
-    xStart: 1.3,
-    xEnd: 16.9,
-    centerZ: 955,
-    length: 26,
-    height: 8.2
+    xStart: 0.0,
+    xEnd: 18.0,
+    centerZ: 955.0,
+    length: 24.8,
+    height: 9.6,
+    baseH: 6.8,
+    yRoad: yRoad
   });
   preGateGroup.add(preGateCanopy);
+
+  // Portal 1: Gantry Masuk Pre-Gate Heavy-Duty (Z = 938m, sesaat sebelum kanopi & timbangan WIM)
+  const entryPortal = createPreGatePortal({
+    centerZ: 938.0,
+    type: 'entry',
+    xMedian: 0.0,
+    xOuter: 18.0,
+    yRoad: yRoad,
+    underbeamH: 6.0
+  });
+  preGateGroup.add(entryPortal);
+
+  // Portal 2: Gantry Keluar Pre-Gate Heavy-Duty (Z = 972m, sesaat setelah kanopi & verifikasi WIM)
+  const exitPortal = createPreGatePortal({
+    centerZ: 972.0,
+    type: 'exit',
+    xMedian: 0.0,
+    xOuter: 18.0,
+    yRoad: yRoad,
+    underbeamH: 6.0
+  });
+  preGateGroup.add(exitPortal);
 
   // ============================================================================
   // 6. SISI KANAN (TENGGARA / -X): JALUR KELUAR (3 LAJUR MENERUS: Z in [660, 1168])
@@ -389,10 +452,7 @@ export function createJalanPreGate() {
   // Marka Garis Putus-putus Lajur Keluar (-4.9m, -8.5m)
   [-4.9, -8.5].forEach((lx) => {
     for (let z = 660; z < 1168; z += 9.0) {
-      const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 3.5), whiteLineMat);
-      dash.rotation.x = -Math.PI / 2;
-      dash.position.set(lx, yRoad + 0.006, z + 1.75);
-      preGateGroup.add(dash);
+      addDashQuad(lx, z + 1.75);
     }
   });
 
@@ -427,13 +487,23 @@ export function createJalanPreGate() {
   preGateGroup.add(createMedianIsland({ startZ: 656, endZ: 1168, centerX: 0, width: 2.6, y: yRoad }));
 
   // Barisan Pohon Rindang di Sepanjang Median Jalan (createMedianTree)
+  // Sterilkan area portal & kanopi pre-gate (Z in [920, 990]) agar tidak menabrak atap & tiang
   for (let z = 662.0; z <= 1162.0; z += 14.0) {
+    if (z >= 920.0 && z <= 990.0) continue;
     const tree = createMedianTree({
       scale: 0.95 + Math.sin(z * 0.1) * 0.15,
       rotationY: (z * 0.5) % (Math.PI * 2)
     });
     tree.position.set(0, yRoad + 0.11, z);
     preGateGroup.add(tree);
+  }
+
+  if (preGateDashedPositions.length > 0) {
+    const dashedGeo = new THREE.BufferGeometry();
+    dashedGeo.setAttribute('position', new THREE.Float32BufferAttribute(preGateDashedPositions, 3));
+    dashedGeo.computeVertexNormals();
+    const dashedMesh = new THREE.Mesh(dashedGeo, whiteLineMat);
+    preGateGroup.add(dashedMesh);
   }
 
   return preGateGroup;

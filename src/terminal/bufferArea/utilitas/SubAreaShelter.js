@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   uvToWorld,
   BUILDINGS_CONFIG
-} from './AreaAGeo.js';
+} from './GeoUtilitas.js';
 
 /**
  * ==============================================================================
@@ -19,7 +19,7 @@ import {
  *
  * Seluruh bangunan dibuat ringan (AABB collider, performa 60 FPS untuk simulasi kendaraan/drone).
  */
-export function createShelterSubArea() {
+export function createSubAreaShelter() {
   const complexGroup = new THREE.Group();
   complexGroup.name = 'subarea_kompleks_bangunan_timur_laut';
 

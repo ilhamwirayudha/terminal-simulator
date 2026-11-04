@@ -6,7 +6,8 @@ import {
   barrierMat,
   whiteLineMat,
   yellowLineMat,
-  seawallMat
+  seawallMat,
+  seaWaterMat
 } from '../../assets/materials/roadMaterials.js';
 
 /**
@@ -21,6 +22,7 @@ import {
  * - Kelengkungan Horizontal (Smooth S-curve sweep 4.8m melintasi selat)
  * - Kelengkungan Vertikal (Parabola arch clearance 6.8m untuk perahu nelayan)
  * - Box Girder ganda, tiang silinder laut dan pier cap setiap 25 meter
+ * - Dioptimasi dengan InstancedMesh & batched dashed lines untuk 60 FPS
  */
 export function createJembatanLaut() {
   const bridgeGroup = new THREE.Group();
@@ -124,7 +126,8 @@ export function createJembatanLaut() {
     createCurvedRibbon(lx - 0.06, lx + 0.06, 0.022, 0.022, yellowLineMat, false, false);
   });
 
-  // Marka Putus-Putus Lajur Jembatan
+  // Marka Putus-Putus Lajur Jembatan (Batched Single BufferGeometry - 1 Draw Call)
+  const allDashesPositions = [];
   [-3.7, 3.7].forEach((lx) => {
     const dashL = 4.5;
     const gapL = 4.5;
@@ -155,50 +158,92 @@ export function createJembatanLaut() {
       const v3 = new THREE.Vector3().copy(fB.P).addScaledVector(fB.N, lx + 0.09).addScaledVector(fB.U, 0.022);
       const v4 = new THREE.Vector3().copy(fB.P).addScaledVector(fB.N, lx - 0.09).addScaledVector(fB.U, 0.022);
 
-      const dPos = [v1.x, v1.y, v1.z, v2.x, v2.y, v2.z, v3.x, v3.y, v3.z, v1.x, v1.y, v1.z, v3.x, v3.y, v3.z, v4.x, v4.y, v4.z];
-      const dGeo = new THREE.BufferGeometry();
-      dGeo.setAttribute('position', new THREE.Float32BufferAttribute(dPos, 3));
-      dGeo.computeVertexNormals();
-      const dMesh = new THREE.Mesh(dGeo, whiteLineMat);
-      bridgeGroup.add(dMesh);
+      allDashesPositions.push(
+        v1.x, v1.y, v1.z, v2.x, v2.y, v2.z, v3.x, v3.y, v3.z,
+        v1.x, v1.y, v1.z, v3.x, v3.y, v3.z, v4.x, v4.y, v4.z
+      );
     }
   });
 
-  // Pilar Beton & Crossbeam Setiap 25 Meter
-  for (let z = bridgeStartZ + 25; z < bridgeEndZ - 15; z += 25) {
-    const t = (z - bridgeStartZ) / bridgeLength;
-    const f = frames[Math.min(frames.length - 1, Math.round(t * numSteps))];
-
-    const crossBeam = new THREE.Mesh(new THREE.BoxGeometry(bridgeWidth - 2.0, 1.4, 3.2), pierConcreteMat);
-    crossBeam.position.copy(f.P).addScaledVector(f.U, -1.3);
-    crossBeam.rotation.y = Math.atan2(f.T.x, f.T.z);
-    crossBeam.castShadow = true;
-    bridgeGroup.add(crossBeam);
-
-    [-4.5, 4.5].forEach((px) => {
-      const colTopY = f.P.y - 1.3;
-      const colHeight = colTopY + 4.5;
-      const column = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.2, colHeight, 12), pierConcreteMat);
-      const colPos = new THREE.Vector3().copy(f.P).addScaledVector(f.N, px);
-      colPos.y = colTopY - colHeight / 2;
-      column.position.copy(colPos);
-      column.castShadow = true;
-      bridgeGroup.add(column);
-
-      const collar = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.0, 3.0), pierConcreteMat);
-      collar.position.set(colPos.x, -0.4, colPos.z);
-      bridgeGroup.add(collar);
-    });
+  if (allDashesPositions.length > 0) {
+    const dashesGeo = new THREE.BufferGeometry();
+    dashesGeo.setAttribute('position', new THREE.Float32BufferAttribute(allDashesPositions, 3));
+    dashesGeo.computeVertexNormals();
+    const dashesMesh = new THREE.Mesh(dashesGeo, whiteLineMat);
+    bridgeGroup.add(dashesMesh);
   }
 
-  // Hamparan Permukaan Air Laut Teluk
-  const seaWaterMat = new THREE.MeshStandardMaterial({
-    color: 0x6e7d73,
-    roughness: 0.28,
-    metalness: 0.18,
-    transparent: true,
-    opacity: 0.94
-  });
+  // Pilar Beton, Column, & Crossbeam Setiap 25 Meter (THREE.InstancedMesh - 3 Draw Calls)
+  const stationZList = [];
+  for (let z = bridgeStartZ + 25; z < bridgeEndZ - 15; z += 25) {
+    stationZList.push(z);
+  }
+  const numStations = stationZList.length;
+
+  if (numStations > 0) {
+    const crossBeamGeo = new THREE.BoxGeometry(bridgeWidth - 2.0, 1.4, 3.2);
+    const crossBeamMesh = new THREE.InstancedMesh(crossBeamGeo, pierConcreteMat, numStations);
+    crossBeamMesh.castShadow = true;
+
+    const columnGeo = new THREE.CylinderGeometry(1.0, 1.2, 1.0, 12);
+    const columnMesh = new THREE.InstancedMesh(columnGeo, pierConcreteMat, numStations * 2);
+    columnMesh.castShadow = true;
+
+    const collarGeo = new THREE.BoxGeometry(3.0, 1.0, 3.0);
+    const collarMesh = new THREE.InstancedMesh(collarGeo, pierConcreteMat, numStations * 2);
+
+    const dummy = new THREE.Object3D();
+    let colIdx = 0;
+
+    for (let i = 0; i < numStations; i++) {
+      const z = stationZList[i];
+      const t = (z - bridgeStartZ) / bridgeLength;
+      const f = frames[Math.min(frames.length - 1, Math.round(t * numSteps))];
+
+      // Crossbeam
+      const cbPos = new THREE.Vector3().copy(f.P).addScaledVector(f.U, -1.3);
+      const cbRotY = Math.atan2(f.T.x, f.T.z);
+      dummy.position.copy(cbPos);
+      dummy.rotation.set(0, cbRotY, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      crossBeamMesh.setMatrixAt(i, dummy.matrix);
+
+      // Columns & Collars (2 per stasiun: kiri & kanan)
+      [-4.5, 4.5].forEach((px) => {
+        const colTopY = f.P.y - 1.3;
+        const colHeight = colTopY + 4.5;
+        const colPos = new THREE.Vector3().copy(f.P).addScaledVector(f.N, px);
+        colPos.y = colTopY - colHeight / 2;
+
+        // Column silinder laut (skala Y menyesuaikan ketinggian pilar)
+        dummy.position.copy(colPos);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.set(1.0, colHeight, 1.0);
+        dummy.updateMatrix();
+        columnMesh.setMatrixAt(colIdx, dummy.matrix);
+
+        // Collar pondasi bawah air
+        dummy.position.set(colPos.x, -0.4, colPos.z);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.set(1.0, 1.0, 1.0);
+        dummy.updateMatrix();
+        collarMesh.setMatrixAt(colIdx, dummy.matrix);
+
+        colIdx++;
+      });
+    }
+
+    crossBeamMesh.instanceMatrix.needsUpdate = true;
+    columnMesh.instanceMatrix.needsUpdate = true;
+    collarMesh.instanceMatrix.needsUpdate = true;
+
+    bridgeGroup.add(crossBeamMesh);
+    bridgeGroup.add(columnMesh);
+    bridgeGroup.add(collarMesh);
+  }
+
+  // Hamparan Permukaan Air Laut Teluk (Shared Material)
   const seaWater = new THREE.Mesh(new THREE.PlaneGeometry(3600, 3600), seaWaterMat);
   seaWater.rotation.x = -Math.PI / 2;
   seaWater.position.set(0, 0.0, 1150);

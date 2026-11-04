@@ -1,18 +1,18 @@
 import * as THREE from 'three';
-import { CY_WAITING_BOUNDS } from './CyWaitingGeo.js';
+import { CY_WAITING_BOUNDS } from './GeoWaitingCY.js';
 
 /**
  * ==============================================================================
  * Sub-Area: Sabuk Hutan Mangrove & Pesisir Pantai (Gambar 2)
  * Sisi Barat Laut Container Yard (X: 136m s/d 185m+ | Z: 775m s/d 1034m)
  * Sesuai Citra Satelit Nyata (Gambar 2):
- * - Strip tanah cokelat / tanggul reklamasi di belakang TR 2 (X: 136m - 146m)
+ * - Strip tanah cokelat / tanggul reklamasi di belakang TR 4 (X: 136m - 146m)
  * - Sabuk hutan bakau rapat pesisir (X: 146m - 172m)
  * - Zona lumpur pasang surut (mudflat) (X: 170m - 176m)
  * - Perairan estuari / laut di sisi terluar (X > 175m)
  * ==============================================================================
  */
-export function createMangrovePesisirSubArea() {
+export function createSubAreaMangrovePesisir() {
   const coastalGroup = new THREE.Group();
   coastalGroup.name = 'subarea_cy_mangrove_pesisir';
 
@@ -25,7 +25,7 @@ export function createMangrovePesisirSubArea() {
   const midZ = (zMin + zMax) / 2;
 
   // ----------------------------------------------------------------------------
-  // 1. Strip Tanah Cokelat / Tanggul Reklamasi di Belakang TR 2 (X: 136 - 146)
+  // 1. Strip Tanah Cokelat / Tanggul Reklamasi di Belakang TR 4 (X: 136 - 146)
   // ----------------------------------------------------------------------------
   const soilMat = new THREE.MeshStandardMaterial({
     color: 0x8a6240, // Tanah cokelat urukan reklamasi

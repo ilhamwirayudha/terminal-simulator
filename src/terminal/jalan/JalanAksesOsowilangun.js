@@ -229,19 +229,25 @@ export function createJalanAksesOsowilangun() {
     roadGroup.add(mesh);
   };
 
+  // Batched Dashed Lines for 60 FPS Performance (1 Draw Call)
+  const batchedDashedPositions = [];
   const addDashedLine = (x, startZ, endZ, yLevel = 0.82) => {
     const length = Math.abs(endZ - startZ);
     const dashL = 3.0;
     const gapL = 2.0;
     const numDashes = Math.floor(length / (dashL + gapL));
+    const halfW = 0.09;
+    const halfL = dashL / 2;
 
     for (let i = 0; i < numDashes; i++) {
-      const curZ = startZ + i * (dashL + gapL) + dashL / 2;
-      const geo = new THREE.PlaneGeometry(0.18, dashL);
-      const mesh = new THREE.Mesh(geo, whiteLineMat);
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.position.set(x, yLevel, curZ);
-      roadGroup.add(mesh);
+      const curZ = startZ + i * (dashL + gapL) + halfL;
+      const x1 = x - halfW, x2 = x + halfW;
+      const z1 = curZ - halfL, z2 = curZ + halfL;
+
+      batchedDashedPositions.push(
+        x1, yLevel, z1,  x2, yLevel, z1,  x2, yLevel, z2,
+        x1, yLevel, z1,  x2, yLevel, z2,  x1, yLevel, z2
+      );
     }
   };
 
@@ -609,20 +615,42 @@ export function createJalanAksesOsowilangun() {
 
   const addConvergingDashedLine = (startX, endX, startZ, endZ) => {
     const numDashes = 8;
+    const halfW = 0.10;
+    const halfL = 1.6;
+    const angle = Math.atan2(endX - startX, -(endZ - startZ));
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
     for (let i = 0; i < numDashes; i++) {
       const t = (i + 0.5) / numDashes;
       const curX = startX + (endX - startX) * t;
       const curZ = startZ + (endZ - startZ) * t;
-      const geo = new THREE.PlaneGeometry(0.20, 3.2);
-      const mesh = new THREE.Mesh(geo, whiteLineMat);
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.rotation.z = Math.atan2(endX - startX, -(endZ - startZ));
-      mesh.position.set(curX, 0.826, curZ);
-      roadGroup.add(mesh);
+
+      const p1X = curX - halfW * cosA - (-halfL) * sinA;
+      const p1Z = curZ - halfW * sinA + (-halfL) * cosA;
+      const p2X = curX + halfW * cosA - (-halfL) * sinA;
+      const p2Z = curZ + halfW * sinA + (-halfL) * cosA;
+      const p3X = curX + halfW * cosA - halfL * sinA;
+      const p3Z = curZ + halfW * sinA + halfL * cosA;
+      const p4X = curX - halfW * cosA - halfL * sinA;
+      const p4Z = curZ - halfW * sinA + halfL * cosA;
+
+      batchedDashedPositions.push(
+        p1X, 0.826, p1Z,  p2X, 0.826, p2Z,  p3X, 0.826, p3Z,
+        p1X, 0.826, p1Z,  p3X, 0.826, p3Z,  p4X, 0.826, p4Z
+      );
     }
   };
   addConvergingDashedLine(8.1, 4.1, -106, -55);
   addConvergingDashedLine(-8.1, -4.1, -106, -55);
+
+  if (batchedDashedPositions.length > 0) {
+    const dashedGeo = new THREE.BufferGeometry();
+    dashedGeo.setAttribute('position', new THREE.Float32BufferAttribute(batchedDashedPositions, 3));
+    dashedGeo.computeVertexNormals();
+    const dashedMesh = new THREE.Mesh(dashedGeo, whiteLineMat);
+    roadGroup.add(dashedMesh);
+  }
 
   return roadGroup;
 }

@@ -5,8 +5,7 @@ import { setupLights } from './world/lights.js';
 import { createEnvironment } from './world/environment.js';
 import { createHighwaySignage } from './world/Signage.js';
 import { createAreaJalan } from './terminal/jalan/index.js';
-import { createAreaA } from './terminal/areaA/index.js';
-import { createCyWaitingArea } from './terminal/cyWaitingArea/index.js';
+import { createBufferArea } from './terminal/bufferArea/index.js';
 import { TruckManager } from './vehicles/TruckManager.js';
 import { CameraManager } from './camera/CameraManager.js';
 import { SelectionManager } from './simulation/SelectionManager.js';
@@ -39,11 +38,8 @@ createEnvironment(scene);
 // 5. Create Area Jalan (Osowilangun, Jembatan Laut, & Jalan Pre-Gate)
 createAreaJalan(scene);
 
-// 6. Create Area A (Sisi Barat Laut: IPAL, Shelter, Parkir Motor, Mangrove)
-createAreaA(scene);
-
-// 7. Create Container Yard & Truck Waiting Area (Sisi Barat Laut: Z in [775, 1034])
-createCyWaitingArea(scene);
+// 6. Create Zona Buffer Barat (Utilitas, Waiting CY, Waiting Cuker: Z in [604.5, 1220+])
+createBufferArea(scene);
 
 // 7. Create Highway Entry/Exit Signage
 createHighwaySignage(scene);
@@ -70,9 +66,10 @@ const fleetTrucks = truckManager.getTrucks();
 const selectionManager = new SelectionManager(canvas, camera);
 fleetTrucks.forEach((t) => selectionManager.registerSelectable(t));
 
-// 9. Initialize Unified CameraManager
+// 9. Initialize Unified CameraManager (Pure First-Person POV)
 const cameraManager = new CameraManager(camera, controls);
 window.cameraManager = cameraManager;
+cameraManager.setupFPSMouseListeners(canvas);
 
 // 10. Initialize Operational InformationPanel Dashboard
 const infoPanel = new InformationPanel();
@@ -99,6 +96,16 @@ function updateCameraUI() {
       cameraStatusBadge.className = 'camera-badge badge-overview';
     }
   }
+}
+
+if (btnFollowToggle) {
+  btnFollowToggle.addEventListener('click', () => {
+    const targetTruck = selectionManager.getSelected() || fleetTrucks[0];
+    if (targetTruck) {
+      cameraManager.toggleFollow(targetTruck);
+      updateCameraUI();
+    }
+  });
 }
 
 // Dedicated Reset Camera Position Button

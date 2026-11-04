@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * Area A Geodesic & Declarative Layout Configuration (AreaAGeo.js)
+ * Geodesic & Layout Utilitas Barat (GeoUtilitas.js)
  * Sesuai Citra Satelit Nyata: Orientasi, Proporsi, dan Tata Letak Sub-Area
  * ==============================================================================
  *
@@ -19,7 +19,7 @@ export const EAST_VECTOR = [0.707, 0.707];
 export const SITE_CALIBRATION = {
   uMinZ: 604.55,  // u = 0.0 (kiri / SW, tanjung mangrove barat daya)
   uMaxZ: 775.0,   // u = 1.0 (kanan / NE, batas timur laut Area A tepat di Z = 775 sebelum pelebaran jalan)
-  vMinX: 149.6,   // v = 0.0 (atas / NW, terluar tanjung mangrove ke laut, proporsional rasio citra 519/649)
+  vMinX: 175.0,   // v = 0.0 (atas / NW, garis pantai utara lurus menyambung CY di X = 175.0)
   baseCurbX: 13.3, // v = 1.0 (bawah / SE, kanstin jalan utama sebelum pelebaran)
   taperStartZ: 775.0,
   taperEndZ: 805.0,
@@ -71,41 +71,79 @@ export function worldToUv(x, z) {
 }
 
 // ------------------------------------------------------------------------------
-// Garis Pantai Acuan Citra Satelit (Diagonal dari Kiri-Bawah ke Kanan-Atas)
-// Air berada di sisi kiri-atas garis ini.
+// Garis Pantai Acuan Citra Satelit & Ground Truth Teluk Lamong
+// Di utara (u in [0.38, 1.00]): Garis pantai lurus di X = 175.0 (v = 0.00),
+// menyambung seamless dengan cyWaitingArea & cukerWaitingArea.
+// Di tanjung NW (u in [0.12, 0.38]): Melengkung mulus (smooth Catmull-Rom/Hermite spline)
+// menuju abutmen jembatan laut di Z = 625 (u = 0.12, v = 0.92, X ≈ 21.2).
 // ------------------------------------------------------------------------------
-export const COASTLINE_UV = [
-  [0.12, 0.92], // Abutmen jembatan sisi laut
-  [0.20, 0.67], // Pesisir barat daya
-  [0.33, 0.46], // Pesisir barat
-  [0.46, 0.31], // Busur tengah
-  [0.62, 0.15], // Lengkungan tanjung barat laut
-  [0.69, 0.10], // Tepi atas tanjung
-  [1.00, 0.09]  // Tepi atas utara menerus ke timur laut
+export const COASTLINE_CONTROL_POINTS = [
+  [0.12, 0.92], // Abutmen jembatan sisi laut (Z = 625.0, X ≈ 21.2)
+  [0.14, 0.72], // Transisi koridor jembatan (Z = 628.4, X ≈ 54.7)
+  [0.18, 0.42], // Pesisir barat daya (Z = 635.2, X ≈ 105.3)
+  [0.25, 0.14], // Bahu tanjung barat daya (Z = 647.2, X ≈ 152.1)
+  [0.32, 0.02], // Lengkungan tanjung barat laut (Z = 659.1, X ≈ 171.8)
+  [0.38, 0.00], // Awal garis pantai utara lurus (Z = 669.3, X = 175.0)
+  [1.00, 0.00]  // Perbatasan CY Waiting Area (Z = 775.0, X = 175.0)
 ];
 
-/**
- * Mendapatkan nilai v garis pantai untuk nilai u tertentu
- */
-export function getCoastlineV(u) {
-  if (u <= COASTLINE_UV[0][0]) return COASTLINE_UV[0][1];
-  if (u >= COASTLINE_UV[COASTLINE_UV.length - 1][0]) {
-    return COASTLINE_UV[COASTLINE_UV.length - 1][1];
+// Evaluator Spline Monotone Hermite untuk kontur pantai kontinu tanpa overshoot
+function createMonotoneSpline(pts) {
+  const n = pts.length;
+  const x = pts.map((p) => p[0]);
+  const y = pts.map((p) => p[1]);
+  const dx = [], dy = [], m = [];
+  for (let i = 0; i < n - 1; i++) {
+    dx.push(x[i + 1] - x[i]);
+    dy.push(y[i + 1] - y[i]);
+    m.push(dy[i] / dx[i]);
   }
-  for (let i = 0; i < COASTLINE_UV.length - 1; i++) {
-    const [u0, v0] = COASTLINE_UV[i];
-    const [u1, v1] = COASTLINE_UV[i + 1];
-    if (u >= u0 && u <= u1) {
-      const t = (u - u0) / (u1 - u0);
-      return v0 + t * (v1 - v0);
+  const d = [m[0]];
+  for (let i = 1; i < n - 1; i++) {
+    if (m[i - 1] * m[i] <= 0) {
+      d.push(0);
+    } else {
+      const common = dx[i - 1] + dx[i];
+      d.push((3 * common) / ((common + dx[i]) / m[i - 1] + (common + dx[i - 1]) / m[i]));
     }
   }
-  return 0.09;
+  d.push(m[n - 2]);
+
+  return function(uVal) {
+    if (uVal <= x[0]) return y[0];
+    if (uVal >= x[n - 1]) return y[n - 1];
+    let i = 0;
+    while (i < n - 2 && x[i + 1] < uVal) i++;
+    const h = dx[i];
+    const t = (uVal - x[i]) / h;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const h00 = 2 * t3 - 3 * t2 + 1;
+    const h10 = t3 - 2 * t2 + t;
+    const h01 = -2 * t3 + 3 * t2;
+    const h11 = t3 - t2;
+    const res = h00 * y[i] + h10 * h * d[i] + h01 * y[i + 1] + h11 * h * d[i + 1];
+    return Math.max(0.0, Math.min(1.0, res));
+  };
 }
 
+const _coastlineSpline = createMonotoneSpline(COASTLINE_CONTROL_POINTS);
+
 /**
- * Mengecek apakah koordinat (u, v) berada di sisi daratan (bukan di air/laut)
+ * Mendapatkan nilai v garis pantai untuk nilai u tertentu (smooth spline)
  */
+export function getCoastlineV(u) {
+  return _coastlineSpline(u);
+}
+
+// Sampling array titik diskret halus untuk kompatibilitas ShapeGeometry
+export const COASTLINE_UV = [];
+for (let i = 0; i <= 44; i++) {
+  const t = i / 44;
+  const u = 0.12 + t * (1.00 - 0.12);
+  COASTLINE_UV.push([Number(u.toFixed(4)), Number(getCoastlineV(u).toFixed(4))]);
+}
+
 export function isLandUV(u, v) {
   if (u < 0.12 || u > 1.02) return false;
   if (v > 1.02) return false;
@@ -150,16 +188,16 @@ export const ZONES_CONFIG = [
   // Zona E: Strip Tanah Merah Kanan-Atas (di atas kompleks gedung)
   {
     id: 'zone_tanah_merah_e',
-    name: 'Strip Tanah Merah Kanan Atas',
-    type: 'red_soil',
+    name: 'Strip Tanah Cokelat Reklamasi Utara',
+    type: 'reclamation_soil',
     uvPolygon: [
-      [0.82, 0.27],
-      [0.99, 0.27],
-      [0.99, 0.31],
-      [0.82, 0.31]
+      [0.52, 0.18],
+      [1.00, 0.18],
+      [1.00, 0.24],
+      [0.52, 0.24]
     ],
-    color: 0x8d553e,
-    roughness: 0.94,
+    color: 0x8a6240, // Warna tanah reklamasi identik dengan CY
+    roughness: 0.95,
     yOffset: 0.02
   },
   // Zona C: Padang Rumput / Semak Terbuka (Hijau muda kekuningan, pohon jarang)
@@ -213,8 +251,8 @@ export const ZONES_CONFIG = [
     name: 'Base Kompleks Bangunan Timur Laut',
     type: 'facility_pavement',
     uvPolygon: [
-      [0.82, 0.32],
-      [0.99, 0.32],
+      [0.82, 0.24],
+      [0.99, 0.24],
       [0.99, 0.97],
       [0.82, 0.97]
     ],
