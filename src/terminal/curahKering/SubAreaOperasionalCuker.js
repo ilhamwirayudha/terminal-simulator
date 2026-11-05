@@ -45,13 +45,14 @@ export function createSubAreaOperasionalCuker() {
     metalness: 0.25
   });
   const roadLightConcreteMat = new THREE.MeshStandardMaterial({
-    color: 0x9ca3af,
-    roughness: 0.82,
-    metalness: 0.05
+    color: 0x22262e,
+    roughness: 0.88,
+    metalness: 0.08
   });
   const darkAsphaltMat = new THREE.MeshStandardMaterial({
-    color: 0x333a42,
-    roughness: 0.88
+    color: 0x22262e,
+    roughness: 0.88,
+    metalness: 0.08
   });
   const gwtWaterChannelMat = new THREE.MeshStandardMaterial({
     color: 0x1e293b,

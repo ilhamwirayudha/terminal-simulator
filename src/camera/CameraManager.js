@@ -105,9 +105,9 @@ export class CameraManager {
           Number.isFinite(parsed.posY) &&
           Number.isFinite(parsed.posZ) &&
           parsed.posY > -5.0 &&
-          parsed.posY < 1500 &&
+          parsed.posY < 1800 &&
           parsed.posZ > -1200 &&
-          parsed.posZ < 3000
+          parsed.posZ < 3900
         ) {
           const groundY = this.getGroundHeight(parsed.posX, parsed.posZ);
           const minPosY = groundY + 0.35;
@@ -485,7 +485,12 @@ export class CameraManager {
       return 0.0;
     }
 
-    // 4. Beyond Corridor
+    // 4. Trestle & Dermaga Lepas Pantai (Z >= 2482)
+    if (z >= 2482) {
+      return 3.2;
+    }
+
+    // 4b. Beyond Corridor (CY & Curah Kering)
     if (z > 1865) {
       return 1.63;
     }
@@ -546,11 +551,11 @@ export class CameraManager {
       this.camera.position.y = minCamY;
     }
 
-    if (this.camera.position.y > 500.0) {
-      this.camera.position.y = 500.0;
+    if (this.camera.position.y > 900.0) {
+      this.camera.position.y = 900.0;
     }
 
-    this.camera.position.x = Math.max(-1000.0, Math.min(600.0, this.camera.position.x));
-    this.camera.position.z = Math.max(-1350.0, Math.min(3000.0, this.camera.position.z));
+    this.camera.position.x = Math.max(-1050.0, Math.min(650.0, this.camera.position.x));
+    this.camera.position.z = Math.max(-1350.0, Math.min(3900.0, this.camera.position.z));
   }
 }

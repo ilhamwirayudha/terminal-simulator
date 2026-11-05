@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {
+  asphaltMat,
   curbHazardWhiteMat,
   whiteLineMat,
   yellowLineMat
@@ -49,11 +50,7 @@ export function createSubAreaLahanCY() {
     metalness: 0.06
   });
 
-  const internalRoadAsphaltMat = new THREE.MeshStandardMaterial({
-    color: 0x3b4148,
-    roughness: 0.88,
-    metalness: 0.06
-  });
+  const internalRoadAsphaltMat = asphaltMat;
 
   const southReclamationSoilMat = new THREE.MeshStandardMaterial({
     color: 0x785c44,

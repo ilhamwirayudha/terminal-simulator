@@ -324,6 +324,22 @@ export const CameraStations = {
     position: new THREE.Vector3(-45, 380, 1335.8),
     target: new THREE.Vector3(-45, 2.0, 1335.0),
     allowOrbit: true
+  },
+  BERTH_OVERVIEW: {
+    id: 'BERTH_OVERVIEW',
+    name: 'Trestle & Dermaga (10 STS)',
+    badge: '● TRESTLE 954M, SEA CONVEYOR & DERMAGA TERPADU (10 STS CRANE)',
+    position: new THREE.Vector3(65.0, 145.0, 3260.0),
+    target: new THREE.Vector3(-120.0, 18.0, 3476.0),
+    allowOrbit: true
+  },
+  BERTH_TOP_VIEW: {
+    id: 'BERTH_TOP_VIEW',
+    name: 'Top View Dermaga Satelit',
+    badge: '● TOP-DOWN SATELIT: DERMAGA PETIKEMAS & CURAH KERING TERPADU (10 STS)',
+    position: new THREE.Vector3(-165.0, 720.0, 3475.0),
+    target: new THREE.Vector3(-165.0, 3.2, 3476.0),
+    allowOrbit: true
   }
 };
 

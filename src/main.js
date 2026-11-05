@@ -8,6 +8,7 @@ import { createAreaJalan } from './terminal/jalan/index.js';
 import { createBufferArea } from './terminal/bufferArea/index.js';
 import { createContainerYardArea } from './terminal/containerYard/index.js';
 import { createCurahKeringArea } from './terminal/curahKering/index.js';
+import { createDermagaArea } from './terminal/dermaga/index.js';
 import { TruckManager } from './vehicles/TruckManager.js';
 import { CameraManager } from './camera/CameraManager.js';
 import { SelectionManager } from './simulation/SelectionManager.js';
@@ -49,6 +50,9 @@ createContainerYardArea(scene);
 
 // 6c. Create Area Terminal Curah Kering (Z: 2117.6 s/d 2482.1 | X: +21.4 s/d +363.2)
 createCurahKeringArea(scene);
+
+// 6d. Create Area Jembatan Penghubung (Trestle), Sea Conveyor & Dermaga Terpadu (Z: 2436 s/d 3516)
+createDermagaArea(scene);
 
 // 7. Create Highway Entry/Exit Signage
 createHighwaySignage(scene);
@@ -187,7 +191,9 @@ function getZoneName(z) {
   if (z <= -140)  return 'Pos Keamanan TTL';
   if (z <= -55)   return 'Gardu PLN & Abutmen';
   if (z < 700)    return 'Causeway 1 (Jembatan)';
-  return 'Terminal Teluk Lamong';
+  if (z < 2482)   return 'Terminal Teluk Lamong (CY & Cuker)';
+  if (z < 3430)   return 'Jembatan Trestle & Sea Conveyor';
+  return 'Dermaga Petikemas & Curah Kering';
 }
 
 function updateGpsTelemetry() {
