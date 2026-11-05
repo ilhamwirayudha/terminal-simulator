@@ -6,6 +6,8 @@ import { createEnvironment } from './world/environment.js';
 import { createHighwaySignage } from './world/Signage.js';
 import { createAreaJalan } from './terminal/jalan/index.js';
 import { createBufferArea } from './terminal/bufferArea/index.js';
+import { createContainerYardArea } from './terminal/containerYard/index.js';
+import { createCurahKeringArea } from './terminal/curahKering/index.js';
 import { TruckManager } from './vehicles/TruckManager.js';
 import { CameraManager } from './camera/CameraManager.js';
 import { SelectionManager } from './simulation/SelectionManager.js';
@@ -40,6 +42,13 @@ createAreaJalan(scene);
 
 // 6. Create Zona Buffer Barat (Utilitas, Waiting CY, Waiting Cuker: Z in [604.5, 1220+])
 createBufferArea(scene);
+
+// 6b. Create Area Gerbang & Kantor Utama (Main Gate Z: 1168 s/d 1699)
+// 6b. Create Area Container Yard Utama (Z: 1836.3 s/d 2478.4 | X: -21.4 s/d -676.1)
+createContainerYardArea(scene);
+
+// 6c. Create Area Terminal Curah Kering (Z: 2117.6 s/d 2482.1 | X: +21.4 s/d +363.2)
+createCurahKeringArea(scene);
 
 // 7. Create Highway Entry/Exit Signage
 createHighwaySignage(scene);
@@ -178,7 +187,7 @@ function getZoneName(z) {
   if (z <= -140)  return 'Pos Keamanan TTL';
   if (z <= -55)   return 'Gardu PLN & Abutmen';
   if (z < 700)    return 'Causeway 1 (Jembatan)';
-  return 'Pulau 1 Kompleks TTL';
+  return 'Terminal Teluk Lamong';
 }
 
 function updateGpsTelemetry() {

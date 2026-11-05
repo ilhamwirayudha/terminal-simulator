@@ -23,12 +23,12 @@ Tujuan:
 
 | Fase | Isi | Folder | Status |
 |---|---|---|---|
-| 1 | Jalan + Buffer Area (utilitas, waiting CY, waiting Cuker) | `jalan/`, `bufferArea/` | Selesai (kalibrasi legacy, lihat 3.4) |
-| 2 | Container Yard + jalan pendukung + **Main Gate** (gerbang masuk menuju CY utama). Diawali ekstraksi aset kontainer dan truk. | `containerYard/`, `gateOffice/` | Belum |
+| 1 | Jalan awal + Buffer Area (utilitas, waiting CY, waiting Cuker) | `jalan/`, `bufferArea/` | Selesai (kalibrasi legacy, lihat 3.4) |
+| 2 | **Main Gate** + **Koridor Jalan Pasca-Gate (Median Pohon & Median Kontainer)** + Container Yard Utama. Diawali ekstraksi aset kontainer (`createContainer.js`). | `jalan/mainGate/`, `jalan/pascaGate/`, `containerYard/` | Sedang Berjalan (Main Gate & Jalan Pasca-Gate Selesai) |
 | 3 | Dermaga + jalan pendukung | `dermaga/` | Belum |
 | 4 | Terminal Curah Kering | `curahKering/` | Belum |
-| 5 | Panel informasi kegiatan per area + animasi sederhana di area operasional utama + 1–2 metrik | `ui/`, `vehicles/`, `simulation/` | Belum |
-| 6 | Kantor/Head Office, alat berat (reach stacker, ASC, STS), kalibrasi ulang Fase 1, penyempurnaan detail | `gateOffice/`, `equipment/`, semua | Belum |
+| 5 | Animasi sederhana di area operasional utama + 1–2 metrik | `ui/`, `vehicles/`, `simulation/` | Belum |
+| 6 | Kantor/Head Office, alat berat (reach stacker, ASC, STS), kalibrasi ulang Fase 1, penyempurnaan detail | `kantor/`, `equipment/`, semua | Belum |
 
 Perkiraan progres per Nov 2026: ±20–25% dari total.
 

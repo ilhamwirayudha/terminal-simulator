@@ -309,8 +309,9 @@ export function createSubAreaFasilitasCuker() {
   mudShape.moveTo(146.0, -1034.4);
   mudShape.lineTo(185.0, -1034.4);
   mudShape.lineTo(185.0, -zMangroveMax);
-  mudShape.lineTo(18.5, -zMangroveMax);
-  mudShape.lineTo(18.5, -zFenceNE);
+  // Sisi Timur Laut disesuaikan agar tidak tumpang tindih dengan sabuk pohon jalan Main Gate (X <= 33m)
+  mudShape.lineTo(33.0, -zMangroveMax);
+  mudShape.lineTo(33.0, -zFenceNE);
   mudShape.lineTo(146.0, -zFenceNE);
   mudShape.closePath();
 
@@ -367,8 +368,8 @@ export function createSubAreaFasilitasCuker() {
     }
   }
 
-  // Mangrove Sisi NE Membelok (Z: 1159.0 s/d 1198.0)
-  for (let x = 20.0; x <= 178.0; x += 3.6) {
+  // Mangrove Sisi NE Membelok (Z: 1159.0 s/d 1198.0, X dimulai dari 33m agar jalan Main Gate steril)
+  for (let x = 33.0; x <= 178.0; x += 3.6) {
     for (let z = zEndSoil; z <= zMangroveMax; z += 3.6) {
       const jx = x + (rand() - 0.5) * 2.2;
       const jz = z + (rand() - 0.5) * 2.2;

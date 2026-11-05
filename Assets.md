@@ -15,12 +15,12 @@ Dokumen ini merupakan pedoman wajib dan aturan tetap bagi agen/pengembang dalam 
 
 * **Root Peta 3D:** Seluruh dunia 3D ini disebut sebagai **"Terminal"**.
 * **Pembagian Area Makro (Level 1):**
-  * **Jalan** (`src/terminal/jalan/`: Seluruh jaringan jalan akses Osowilangon, interchange tol, jembatan laut penghubung / causeway, dan koridor jalan pre-gate).
+  * **Jalan** (`src/terminal/jalan/`: Seluruh jaringan jalan dan gerbang akses di terminal, meliputi Akses Osowilangun, Jembatan Laut / Causeway, Jalan Pre-Gate, Main Gate & Kanopi Utama, serta Jalan Koridor Pasca Gate dengan Median Pohon & Median Kontainer).
   * **Buffer Area / Zona Penyangga Barat** (`src/terminal/bufferArea/`: Kawasan penyangga pra-gerbang di sisi barat laut koridor jalan masuk, mencakup IPAL, shelter supir, parkir motor, waiting area truk petikemas Blok TR 2-4, waiting area truk curah kering Blok TR 5, dan sabuk hutan mangrove pesisir).
-  * **Gerbang & Kantor Utama** (`src/terminal/gateOffice/`: Rencana pengembangan, **Fase 2** untuk Main Gate (gerbang masuk menuju CY utama) dan jembatan timbang, Fase 6 untuk Gedung Graha Pelindo, masjid, dan plaza parkir kantor).
   * **Container Yard Utama** (`src/terminal/containerYard/`: Rencana pengembangan, **Fase 2** - Lapangan penumpukan petikemas Blok 1 s/d Blok 4, rel Automated Stacking Cranes / ASC, reefer yard, dan empty yard).
-  * **Terminal Curah Kering** (`src/terminal/curahKering/`: Rencana pengembangan, Fase 4 - Kompleks silo gandum/kedelai, dome warehouse, dan jembatan konveyor layang).
   * **Dermaga / Berth Lepas Pantai** (`src/terminal/dermaga/`: Rencana pengembangan, **Fase 3** - Jembatan trestle laut, dermaga petikemas & curah kering, dan Ship-to-Shore / STS cranes).
+  * **Terminal Curah Kering** (`src/terminal/curahKering/`: Rencana pengembangan, **Fase 4** - Kompleks silo gandum/kedelai, dome warehouse, dan jembatan konveyor layang).
+  * **Kantor Utama / Head Office** (`src/terminal/kantor/`: Rencana pengembangan, **Fase 6** - Gedung Graha Pelindo, masjid, lapangan olahraga, dan plaza parkir kantor).
 * **Tempat / Sub-Wilayah (Level 2 & 3):**
   * Tempat-tempat spesifik di dalam masing-masing Area.
   * Setiap tempat spesifik **wajib memiliki file terpisah** dengan penamaan Bahasa Indonesia (`SubArea...js` & `Geo...js`) agar modular, mudah di-maintain, dan tidak menjadi file monolitik raksasa.
@@ -50,20 +50,33 @@ Dokumen ini merupakan pedoman wajib dan aturan tetap bagi agen/pengembang dalam 
 src/
 ├── assets/                     <-- PUSTAKA ASSET (Dibuat dulu di sini)
 │   ├── materials/              # Shared PBR materials (aspal, beton, baja, kaca, rumput)
-│   ├── infrastructure/         # Lampu jalan, rambu, pagar BRC, pembatas beton (jersey barrier)
+│   ├── infrastructure/         # Lampu jalan, rambu, pagar BRC, pembatas beton, kanopi & booth gate
 │   ├── buildings/              # Pos satpam, shelter supir, modul gedung, gardu listrik
 │   ├── industrial/             # Tangki IPAL/BBM, rak pipa, genset
-│   ├── nature/                 # Pohon palem, semak, vegetasi, mangrove
-│   ├── containers/             # (Rencana Fase 2) createContainer: standar dimensi kontainer tunggal
+│   ├── nature/                 # Pohon palem, semak, vegetasi, mangrove, pita pohon tepi jalan
+│   ├── containers/             # createContainer: standar dimensi kontainer 20ft/40ft & InstancedMesh
 │   └── vehicles/               # (Rencana Fase 2) createContainerTruck: standar dimensi truk tunggal
 │
 └── terminal/                   <-- SELURUH DUNIA 3D TERMINAL
     │
-    ├── jalan/                  <-- Area: Jalan & Jembatan Laut
+    ├── jalan/                  <-- Area: Seluruh Jaringan Jalan, Jembatan & Gerbang Utama
     │   ├── index.js            # Coordinator Area Jalan
     │   ├── JalanAksesOsowilangun.js
     │   ├── JembatanLaut.js
-    │   └── JalanPreGate.js
+    │   ├── JalanPreGate.js
+    │   ├── mainGate/           # Sub-Klaster: Jalan & Kanopi Main Gate (Z: 1168 - 1699)
+    │   │   ├── index.js
+    │   │   ├── GeoMainGate.js
+    │   │   ├── SubAreaJalanMainGate.js
+    │   │   ├── SubAreaKanopiMainGate.js
+    │   │   └── SubAreaPohonTepi.js
+    │   └── pascaGate/          # Sub-Klaster: Koridor Jalan Pasca Gate, Median Pohon & Kontainer (Z: 1699 - 2436)
+    │       ├── index.js
+    │       ├── GeoPascaGate.js
+    │       ├── SubAreaJalanPascaGate.js
+    │       ├── SubAreaMedianPohon.js
+    │       ├── SubAreaMedianKontainer.js
+    │       └── SubAreaPohonPascaGate.js
     │
     └── bufferArea/             <-- Area: Zona Penyangga & Fasilitas Barat
         ├── index.js            # Coordinator Utama Buffer Area

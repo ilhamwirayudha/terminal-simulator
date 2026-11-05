@@ -107,7 +107,7 @@ export class CameraManager {
           parsed.posY > -5.0 &&
           parsed.posY < 1500 &&
           parsed.posZ > -1200 &&
-          parsed.posZ < 2000
+          parsed.posZ < 3000
         ) {
           const groundY = this.getGroundHeight(parsed.posX, parsed.posZ);
           const minPosY = groundY + 0.35;
@@ -550,7 +550,7 @@ export class CameraManager {
       this.camera.position.y = 500.0;
     }
 
-    this.camera.position.x = Math.max(-450.0, Math.min(350.0, this.camera.position.x));
-    this.camera.position.z = Math.max(-1350.0, Math.min(2400.0, this.camera.position.z));
+    this.camera.position.x = Math.max(-1000.0, Math.min(600.0, this.camera.position.x));
+    this.camera.position.z = Math.max(-1350.0, Math.min(3000.0, this.camera.position.z));
   }
 }

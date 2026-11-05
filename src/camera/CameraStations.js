@@ -181,12 +181,44 @@ export const CameraStations = {
     target: new THREE.Vector3(62, 4.0, 760),
     allowOrbit: true
   },
-  MAIN_GATE: {
-    id: 'MAIN_GATE',
-    name: 'Gerbang Pre-Gate',
+  PRE_GATE_CANOPY: {
+    id: 'PRE_GATE_CANOPY',
+    name: 'Kanopi Pre-Gate',
     badge: '● KANOPI GERBANG PRE-GATE, AUTO-GATE & DUAL PORTAL VGM (Z = 955)',
     position: new THREE.Vector3(9.1, 14.0, 912.0),
     target: new THREE.Vector3(9.1, 4.8, 955.0),
+    allowOrbit: true
+  },
+  MAIN_GATE: {
+    id: 'MAIN_GATE',
+    name: 'Main Gate Terminal',
+    badge: '● KANOPI MAIN GATE: 4 IN + 3 OUT KONTAINER & DUAL GATE CUKER (Z ≈ 1613)',
+    position: new THREE.Vector3(0.0, 24.0, 1540.0),
+    target: new THREE.Vector3(0.0, 6.0, 1613.0),
+    allowOrbit: true
+  },
+  MAIN_GATE_TOP_VIEW: {
+    id: 'MAIN_GATE_TOP_VIEW',
+    name: 'Main Gate (Top View Satelit)',
+    badge: '● MAIN GATE: SATELLITE TOP-DOWN VIEW (Z = 1168 s/d 1699)',
+    position: new THREE.Vector3(0.0, 220.0, 1550.0),
+    target: new THREE.Vector3(0.0, 1.6, 1610.0),
+    allowOrbit: true
+  },
+  POST_GATE_OVERVIEW: {
+    id: 'POST_GATE_OVERVIEW',
+    name: 'Koridor Pasca Gate & Median Pohon',
+    badge: '● KORIDOR PASCA GATE: MEDIAN POHON, POS OPERASIONAL & 8 LAJUR CY (Z: 1700 - 2050)',
+    position: new THREE.Vector3(0.0, 115.0, 1710.0),
+    target: new THREE.Vector3(0.0, 3.0, 1880.0),
+    allowOrbit: true
+  },
+  CONTAINER_MEDIAN_VIEW: {
+    id: 'CONTAINER_MEDIAN_VIEW',
+    name: 'Median Kontainer 4 Bay',
+    badge: '● MEDIAN KONTAINER: TUMPUKAN 20FT MELINTANG 1-4 TIER (Z: 2074 - 2376)',
+    position: new THREE.Vector3(16.0, 42.0, 2035.0),
+    target: new THREE.Vector3(0.0, 5.0, 2180.0),
     allowOrbit: true
   },
   DRIVER_WALKWAY: {
