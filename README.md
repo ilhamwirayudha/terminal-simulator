@@ -1,56 +1,49 @@
 # Terminal Teluk Lamong (TTL) 3D Operation Simulator
 
-Simulator web 3D interaktif (Three.js + Vite) yang mereplika Terminal Teluk Lamong, Surabaya (PT Pelindo), dalam skala 1:1 berdasarkan koordinat nyata. Tujuan akhirnya adalah simulasi operasional petikemas yang terukur.
+Simulator web 3D interaktif berbasis Three.js dan Vite yang mereplika kawasan Terminal Teluk Lamong, Surabaya (PT Pelindo), dalam skala metrik 1:1 berdasarkan koordinat GPS nyata.
 
-Proyek ini sedang dikembangkan bertahap. Tujuan, roadmap fase, dan konvensi koordinat ada di **[prd.md](prd.md)**. Aturan kode dan struktur folder ada di **[Assets.md](Assets.md)**.
+## Dokumentasi Proyek
 
-## Stack
+Untuk menghindari duplikasi, detail spesifikasi dan arsitektur dipisah pada dokumen berikut:
+
+* **[docs/prd.md](docs/prd.md)** — *Product Requirements Document* (overview produk, tujuan, target pengguna, fitur inti, *user flow*, kebutuhan fungsional/non-fungsional, ruang lingkup, dan kriteria keberhasilan).
+* **[docs/Assets.md](docs/Assets.md)** — Standar arsitektur kode, struktur direktori `src/`, serta spesifikasi aset 3D (alat berat STS/ASC/RTG, armada truk, kontainer ISO, bangunan, infrastruktur, dan lingkungan).
+
+## Stack Teknologi
 
 | Komponen | Teknologi |
 |---|---|
 | Grafis 3D | Three.js `^0.185.1` |
-| Build tool | Vite `^8.2.0` |
+| Build Tool | Vite `^8.2.0` |
 | Bahasa | JavaScript (ESM) |
-| UI | HTML + CSS (panel HUD) |
+| Antarmuka | HTML + CSS (HUD interaktif & Mini-Map 2D Canvas) |
 
-## Menjalankan
+## Menjalankan Proyek
 
-Prasyarat: Node.js 18+ dan browser dengan WebGL 2.
+Prasyarat: **Node.js 18+** dan browser desktop modern dengan dukungan **WebGL 2**.
 
 ```bash
 npm install
-npm run dev       # server pengembangan
-npm run build     # build produksi
-npm run preview   # pratinjau hasil build
+npm run dev       # menjalankan server pengembangan lokal
+npm run build     # membangun bundel produksi ke dist/
+npm run preview   # pratinjau hasil build produksi
 ```
 
-## Kontrol
+## Referensi Kontrol Cepat
 
-| Kontrol | Fungsi |
+| Input | Fungsi |
 |---|---|
-| Mouse | Mengarahkan/memutar kamera (mode first-person) |
-| `W` `A` `S` `D` | Bergerak maju, kiri, mundur, kanan |
-| `Q` / `E` | Naik / turun |
-| `Shift` | Bergerak lebih cepat |
-| `[` / `]` | Zoom lensa (FOV) |
-| `R` atau `Esc` | Reset kamera ke posisi Overview |
-| Tombol stasiun di panel | Pindah cepat ke sudut pandang preset |
-| Panel GPS | Lihat koordinat kamera, salin, dan teleportasi lewat lat/lon |
-
-## Struktur Singkat
-
-```text
-src/
-├── assets/     # Aset 3D reusable (material, infrastruktur, bangunan, industri, alam)
-├── terminal/   # Dunia 3D: jalan/, bufferArea/ (area lain menyusul sesuai roadmap)
-├── world/      # Scene, lampu, proyeksi GPS, environment
-├── camera/     # Kamera dan preset stasiun
-├── vehicles/   # Truk (belum aktif)
-├── simulation/ # State machine dan seleksi objek
-└── ui/         # Panel HUD dan kompas
-```
-
-Detail lengkap ada di [Assets.md](Assets.md).
+| `Drag Kiri` | Pan peta mendatar (`DRONE`) / Menoleh 360° (`POV`) |
+| `Drag Kanan` / `Tengah` / `Ctrl+Kiri` | Orbit 360° mengelilingi titik fokus (`DRONE`) |
+| `Scroll` | Zoom ke arah kursor (`DRONE`) / Maju-mundur di jalur (`POV`) |
+| `W` `A` `S` `D` | Gerak horizontal |
+| `Q` / `E` (atau `Z`) | Naik / turun ketinggian |
+| `Shift` / `Alt` | Pengali kecepatan cepat (`2.5x`) / presisi (`0.2x`) |
+| `1`–`5` | Pilih sektor operasional (`Pre-Gate` s/d `Dermaga`) |
+| `[` / `]` | Berpindah ke sektor sebelumnya / berikutnya |
+| `V` | Ganti mode kamera (`DRONE` / `POV`) |
+| `R` atau `Esc` | Reset kamera ke tampilan Overview |
+| `Space` | Play / Pause simulasi waktu (saat mode jam `SIM` aktif) |
 
 ## Pengembangan
 
