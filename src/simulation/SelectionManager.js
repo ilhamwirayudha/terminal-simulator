@@ -1,190 +1,226 @@
 import * as THREE from 'three';
+import {
+  OPERATIONAL_SECTORS,
+  getSectorById,
+  resolveOperationalSector
+} from '../terminal/SectorRegistry.js';
+
+const _landPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.65);
+const _pierPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -3.22);
+const _planeHit = new THREE.Vector3();
 
 /**
  * ==============================================================================
- * SelectionManager (Raycaster Selection & Deselection Toggle)
+ * SelectionManager (3D Sector Raycaster & Perimeter Highlight Controller)
  * ==============================================================================
  *
- * Uses Three.js Raycaster to detect clicks and hovers over 3D interactive entities.
- *
- * Features:
- * - Distinguishes quick clicks from camera orbit drag gestures.
- * - Clicking a truck selects it; clicking it again or clicking empty ground deselects it.
- * - Updates hover cursor feedback (`pointer` vs `default`).
- * - Manages active selected truck state and fires `onSelectionChange` callbacks.
+ * Memungkinkan user mengklik langsung salah satu dari 5 sektor operasional di
+ * kanvas 3D untuk menyorot batas area, mengarahkan kamera, dan membaca aktivitas.
  */
 export class SelectionManager {
-  /**
-   * @param {HTMLCanvasElement} canvas
-   * @param {THREE.PerspectiveCamera} camera
-   */
-  constructor(canvas, camera) {
+  constructor(canvas, camera, scene) {
     this.canvas = canvas;
     this.camera = camera;
+    this.scene = scene;
 
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
 
-    this.selectables = []; // List of registered Truck instances
-    this.selectedTruck = null;
-    this.hoveredTruck = null;
+    this.hitboxMeshes = [];
+    this.sectorVisuals = new Map(); // sectorId -> Array<{ lineMat, fillMat }>
 
+    this.selectedSectorId = null;
+    this.hoveredSectorId = null;
     this.onSelectionChange = null;
 
-    // Gesture tracking to distinguish clicks from camera drags
     this.pointerDownPos = { x: 0, y: 0 };
+    this.pointerDownButton = -1;
     this.pointerDownTime = 0;
 
+    this._buildSectorVolumes();
     this._initEvents();
   }
 
-  /**
-   * Registers a truck for interactive raycasting selection.
-   * @param {Object} truck - Instance of Truck
-   */
-  registerSelectable(truck) {
-    if (truck && !this.selectables.includes(truck)) {
-      this.selectables.push(truck);
+  _buildSectorVolumes() {
+    const group = new THREE.Group();
+    group.name = 'sector_selection_volumes';
+
+    const hitboxMat = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      colorWrite: false,
+      side: THREE.FrontSide
+    });
+
+    OPERATIONAL_SECTORS.forEach((sector) => {
+      const visuals = [];
+
+      sector.bounds.forEach((b) => {
+        const widthX = b.xMax - b.xMin;
+        const lengthZ = b.zMax - b.zMin;
+        const cx = (b.xMin + b.xMax) * 0.5;
+        const cz = (b.zMin + b.zMax) * 0.5;
+        const yBase = b.yBase ?? 1.65;
+        const height = b.height ?? 18.0;
+
+        // 1. Lightweight invisible raycast hitbox covering buildings/cranes/ground
+        const boxGeo = new THREE.BoxGeometry(widthX, height, lengthZ);
+        const hitbox = new THREE.Mesh(boxGeo, hitboxMat);
+        hitbox.position.set(cx, yBase + height * 0.5, cz);
+        hitbox.userData.sectorId = sector.id;
+        hitbox.raycast = THREE.Mesh.prototype.raycast;
+        group.add(hitbox);
+        this.hitboxMeshes.push(hitbox);
+
+        // 2. Crisp ground perimeter outline
+        const yLine = yBase + 0.18;
+        const pts = [
+          new THREE.Vector3(b.xMin, yLine, b.zMin),
+          new THREE.Vector3(b.xMax, yLine, b.zMin),
+          new THREE.Vector3(b.xMax, yLine, b.zMax),
+          new THREE.Vector3(b.xMin, yLine, b.zMax)
+        ];
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        const lineMat = new THREE.LineBasicMaterial({
+          color: new THREE.Color(sector.accentColor),
+          transparent: true,
+          opacity: 0.16,
+          depthWrite: false
+        });
+        const outline = new THREE.LineLoop(lineGeo, lineMat);
+        outline.renderOrder = 10;
+        group.add(outline);
+
+        // 3. Subtle translucent area highlight fill
+        const fillGeo = new THREE.PlaneGeometry(widthX, lengthZ);
+        const fillMat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(sector.accentColor),
+          transparent: true,
+          opacity: 0.0,
+          depthWrite: false,
+          side: THREE.DoubleSide
+        });
+        const fill = new THREE.Mesh(fillGeo, fillMat);
+        fill.rotation.x = -Math.PI / 2;
+        fill.position.set(cx, yBase + 0.12, cz);
+        fill.renderOrder = 9;
+        group.add(fill);
+
+        visuals.push({ lineMat, fillMat });
+      });
+
+      this.sectorVisuals.set(sector.id, visuals);
+    });
+
+    if (this.scene) {
+      this.scene.add(group);
     }
   }
 
-  /**
-   * Attaches pointer event listeners to the canvas.
-   * @private
-   */
   _initEvents() {
     this.canvas.addEventListener('pointerdown', (e) => {
       this.pointerDownPos.x = e.clientX;
       this.pointerDownPos.y = e.clientY;
+      this.pointerDownButton = e.button;
       this.pointerDownTime = performance.now();
     });
 
     this.canvas.addEventListener('pointermove', (e) => {
-      // Convert screen pixels to Normalized Device Coordinates (NDC) [-1 to +1]
       this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
       this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      this._checkHover();
+      this._updateHover();
     });
 
     this.canvas.addEventListener('pointerup', (e) => {
+      if (this.pointerDownButton !== 0) return;
+
       const dist = Math.hypot(e.clientX - this.pointerDownPos.x, e.clientY - this.pointerDownPos.y);
       const elapsed = performance.now() - this.pointerDownTime;
 
-      // Only treat as a click if mouse barely moved (< 6px) and released quickly (< 400ms)
-      if (dist < 6 && elapsed < 400) {
+      if (dist < 6 && elapsed < 350) {
         this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
         this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        const sectorId = this._raycastSectorId();
 
-        this._handleClick(e);
+        if (sectorId) {
+          this.selectSector(sectorId, { source: '3d' });
+        } else if (this.selectedSectorId) {
+          this.deselect({ source: '3d' });
+        }
       }
     });
   }
 
-  /**
-   * Performs raycasting to update hover state and cursor style.
-   * @private
-   */
-  _checkHover() {
+  _raycastSectorId() {
     this.raycaster.setFromCamera(this.pointer, this.camera);
 
-    const hit = this._raycastSelectables();
-
-    if (hit) {
-      const truck = hit.object.userData.truck;
-      if (truck) {
-        this.canvas.style.cursor = 'pointer';
-        this.hoveredTruck = truck;
-        return;
-      }
+    const hits = this.raycaster.intersectObjects(this.hitboxMeshes, false);
+    if (hits.length > 0 && hits[0].object?.userData?.sectorId) {
+      return hits[0].object.userData.sectorId;
     }
 
-    this.canvas.style.cursor = 'default';
-    this.hoveredTruck = null;
-  }
-
-  /**
-   * Performs raycasting on pointer click to select or deselect truck.
-   * @private
-   */
-  _handleClick(e) {
-    this.raycaster.setFromCamera(this.pointer, this.camera);
-
-    const hit = this._raycastSelectables();
-
-    if (hit && hit.object.userData.truck) {
-      const clickedTruck = hit.object.userData.truck;
-      // If clicking the currently selected truck, toggle unclick / deselect!
-      if (this.selectedTruck === clickedTruck) {
-        this.deselect();
-      } else {
-        this.select(clickedTruck);
-      }
-    } else {
-      // Clicked outside on ground / empty space -> unclick / deselect!
-      if (this.selectedTruck) {
-        this.deselect();
-      }
+    // Fallback when camera is inside a tall hitbox volume: check ground plane intersection
+    if (this.raycaster.ray.intersectPlane(_pierPlane, _planeHit)) {
+      const pierSector = resolveOperationalSector(_planeHit.x, _planeHit.z);
+      if (pierSector && _planeHit.z >= 3400) return pierSector.id;
     }
+    if (this.raycaster.ray.intersectPlane(_landPlane, _planeHit)) {
+      const landSector = resolveOperationalSector(_planeHit.x, _planeHit.z);
+      if (landSector && _planeHit.z < 3400) return landSector.id;
+    }
+
+    return null;
   }
 
-  /**
-   * Raycasts against all registered selectable truck groups.
-   * @private
-   * @returns {THREE.Intersection | null}
-   */
-  _raycastSelectables() {
-    const meshesToTest = [];
+  _updateHover() {
+    const hoveredId = this._raycastSectorId();
+    if (hoveredId === this.hoveredSectorId) return;
 
-    this.selectables.forEach((truck) => {
-      const meshGroup = truck.getMesh();
-      if (meshGroup) {
-        meshGroup.traverse((child) => {
-          if (child.isMesh && !child.userData.isHelper) {
-            meshesToTest.push(child);
-          }
-        });
-      }
+    this.hoveredSectorId = hoveredId;
+    this.canvas.style.cursor = hoveredId ? 'pointer' : 'grab';
+    this._refreshVisualStates();
+  }
+
+  _refreshVisualStates() {
+    this.sectorVisuals.forEach((visuals, sectorId) => {
+      const isSelected = sectorId === this.selectedSectorId;
+      const isHovered = sectorId === this.hoveredSectorId;
+
+      const lineOpacity = isSelected ? 0.95 : isHovered ? 0.65 : 0.16;
+      const fillOpacity = isSelected ? 0.12 : isHovered ? 0.05 : 0.0;
+
+      visuals.forEach(({ lineMat, fillMat }) => {
+        lineMat.opacity = lineOpacity;
+        fillMat.opacity = fillOpacity;
+      });
     });
-
-    const intersections = this.raycaster.intersectObjects(meshesToTest, false);
-    return intersections.length > 0 ? intersections[0] : null;
   }
 
-  /**
-   * Selects a truck, applies visual indicator, and fires change callback.
-   * @param {Object} truck
-   */
-  select(truck) {
-    if (this.selectedTruck === truck) return;
+  selectSector(sectorId, meta = { source: 'ui' }) {
+    const sector = getSectorById(sectorId);
+    if (!sector) return;
 
-    if (this.selectedTruck) {
-      this.selectedTruck.setSelected(false);
-    }
-
-    this.selectedTruck = truck;
-
-    if (this.selectedTruck) {
-      this.selectedTruck.setSelected(true);
-    }
+    const wasAlreadySelected = this.selectedSectorId === sector.id;
+    this.selectedSectorId = sector.id;
+    this._refreshVisualStates();
 
     if (typeof this.onSelectionChange === 'function') {
-      this.onSelectionChange(this.selectedTruck);
+      this.onSelectionChange(sector, { ...meta, wasAlreadySelected });
     }
   }
 
-  /**
-   * Deselects current truck.
-   */
-  deselect() {
-    this.select(null);
+  deselect(meta = { source: 'ui' }) {
+    if (!this.selectedSectorId) return;
+    this.selectedSectorId = null;
+    this._refreshVisualStates();
+
+    if (typeof this.onSelectionChange === 'function') {
+      this.onSelectionChange(null, meta);
+    }
   }
 
-  /**
-   * Returns currently selected truck instance.
-   * @returns {Object | null}
-   */
-  getSelected() {
-    return this.selectedTruck;
+  getSelectedSector() {
+    return getSectorById(this.selectedSectorId);
   }
 }

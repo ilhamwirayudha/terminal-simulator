@@ -42,19 +42,18 @@ export function createSubAreaMangrove() {
   waterShape.moveTo(175.0, -775.0);
   waterShape.lineTo(235.0, -775.0); // Lebar 60m persis menyambung water CY
   waterShape.lineTo(235.0, -650.0); // Koridor laut utara
-  waterShape.lineTo(190.0, -580.0); // Teluk luar barat laut
-  waterShape.lineTo(-30.0, -580.0); // Perairan lepas sisi barat
-  waterShape.lineTo(-30.0, -625.0); // Sisi barat abutmen
+  waterShape.lineTo(190.0, -530.0); // Teluk luar barat laut
+  waterShape.lineTo(-30.0, -530.0); // Perairan lepas sisi barat
+  waterShape.lineTo(-30.0, -570.0); // Sisi barat abutmen (Z = 570)
 
-  // Hubungkan ke abutmen jembatan (u = 0.12)
-  const ptAbut = uvToWorld(0.12, getCoastlineV(0.12));
+  // Hubungkan ke abutmen jembatan (u = 0.00)
+  const ptAbut = uvToWorld(0.00, getCoastlineV(0.00));
   waterShape.lineTo(ptAbut.x, -ptAbut.z);
 
   // Telusuri garis pantai dari abutmen naik ke perbatasan Z = 775
-  const waterCoastSteps = 36;
+  const waterCoastSteps = 44;
   for (let i = 1; i <= waterCoastSteps; i++) {
-    const t = i / waterCoastSteps;
-    const u = 0.12 + t * (1.00 - 0.12);
+    const u = i / waterCoastSteps;
     const w = uvToWorld(u, getCoastlineV(u));
     waterShape.lineTo(w.x, -w.z);
   }
@@ -78,34 +77,27 @@ export function createSubAreaMangrove() {
   });
 
   const mudflatShape = new THREE.Shape();
-  const mudSteps = 36;
+  const mudSteps = 44;
 
-  // Garis luar mudflat (dari abutmen u = 0.12 ke Z = 775)
+  // Garis luar mudflat (dari abutmen u = 0.00 ke Z = 775)
   const outerPts = [];
   for (let i = 0; i <= mudSteps; i++) {
-    const t = i / mudSteps;
-    const u = 0.12 + t * (1.00 - 0.12);
+    const u = i / mudSteps;
     const vCoast = getCoastlineV(u);
-    // Tepi terluar lumpur sedikit menjorok ke perairan (1m keluar)
     const w = uvToWorld(u, Math.max(0, vCoast - 0.006));
     outerPts.push(w);
   }
-  // Kunci titik ujung Z = 775 tepat di X = 176.0 (matching CY)
   outerPts[outerPts.length - 1].x = 176.0;
 
-  // Garis dalam mudflat (dari Z = 775 kembali ke abutmen u = 0.12)
+  // Garis dalam mudflat (dari Z = 775 kembali ke abutmen u = 0.00)
   const innerPts = [];
   for (let i = mudSteps; i >= 0; i--) {
-    const t = i / mudSteps;
-    const u = 0.12 + t * (1.00 - 0.12);
+    const u = i / mudSteps;
     const vCoast = getCoastlineV(u);
-    // Di utara (u >= 0.38): batas dalam di X = 146.0 (v approx 0.18)
-    // Di tanjung & barat: offset inland ~25-30m
-    const vInner = u >= 0.38 ? 0.18 : Math.min(0.98, vCoast + 0.18);
+    const vInner = u >= 0.59 ? 0.18 : Math.min(0.98, vCoast + 0.18);
     const w = uvToWorld(u, vInner);
     innerPts.push(w);
   }
-  // Kunci batas dalam Z = 775 tepat di X = 146.0 (matching CY)
   innerPts[0].x = 146.0;
 
   mudflatShape.moveTo(outerPts[0].x, -outerPts[0].z);
@@ -152,35 +144,35 @@ export function createSubAreaMangrove() {
   };
 
   const isZoneC = (u, v) => {
-    return (u >= 0.28 && u <= 0.55 && v >= 0.55 && v <= 0.87);
+    return (u >= 0.16 && u <= 0.43 && v >= 0.48 && v <= 0.86);
   };
 
   const isTanahMerahD = (u, v) => {
-    return (u >= 0.25 && u <= 0.51 && v >= 0.89 && v <= 1.00);
+    return (u >= 0.12 && u <= 0.43 && v >= 0.86 && v <= 1.00);
   };
 
   const isYardOrComplex = (u, v) => {
-    // Halaman / Yard Tengah
-    if (u >= 0.52 && u <= 0.78 && v >= 0.68 && v <= 0.90) return true;
-    // Jalur perkerasan & kompleks gedung timur laut
-    if (u >= 0.79 && v >= 0.24) return true;
+    // Halaman SubAreaIpal (u: 0.433 - 0.696, v: 0.669 - 0.994)
+    if (u >= 0.43 && u <= 0.70 && v >= 0.66 && v <= 0.995) return true;
+    // Jalur perkerasan & kompleks ParkirMotor + Shelter (u >= 0.715, v >= 0.25)
+    if (u >= 0.715 && v >= 0.25) return true;
     return false;
   };
 
   const isSoilStrip = (u, v) => {
-    // Strip tanah cokelat reklamasi (X: 136-146 di belakang gedung & IPAL)
-    return (u >= 0.50 && v >= 0.175 && v <= 0.245);
+    // Strip tanah cokelat reklamasi utara
+    return (u >= 0.72 && v >= 0.175 && v <= 0.25);
   };
 
   const isRoadBuffer = (u, v) => {
     return v >= 0.985;
   };
 
-  // Jittered Grid Sampling (dimulai dari vGrid = 0.008 dekat garis pantai X = 175)
-  const uStep = 0.014;
-  const vStep = 0.016;
+  // Jittered Grid Sampling (dimulai dari uGrid = 0.005 s/d 0.995)
+  const uStep = 0.012;
+  const vStep = 0.015;
 
-  for (let uGrid = 0.11; uGrid <= 0.995; uGrid += uStep) {
+  for (let uGrid = 0.005; uGrid <= 0.995; uGrid += uStep) {
     for (let vGrid = 0.008; vGrid <= 0.99; vGrid += vStep) {
       const u = uGrid + (rand() - 0.5) * uStep * 0.95;
       const v = vGrid + (rand() - 0.5) * vStep * 0.95;
@@ -267,10 +259,20 @@ export function createSubAreaMangrove() {
   // 4. Pohon Tunggal Kecil Tersebar Dekat Halaman (Sesuai Citra Satelit)
   // ----------------------------------------------------------------------------
   const isolatedUVs = [
-    { u: 0.52, v: 0.95, scale: 0.95, color: colInlandGreen },
-    { u: 0.50, v: 0.93, scale: 0.85, color: colInlandLight },
-    { u: 0.70, v: 0.90, scale: 0.90, color: colInlandGreen },
-    { u: 0.72, v: 0.92, scale: 0.80, color: colInlandLight }
+    { u: 0.42, v: 0.93, scale: 0.95, color: colInlandGreen },
+    { u: 0.40, v: 0.91, scale: 0.85, color: colInlandLight },
+    { u: 0.61, v: 0.91, scale: 0.90, color: colInlandGreen },
+    { u: 0.64, v: 0.93, scale: 0.80, color: colInlandLight },
+    // Barisan pohon peneduh di dalam kompleks timur laut (di bawah bak putih utara & sepanjang jalan akses)
+    { u: 0.78, v: 0.328, scale: 0.85, color: colInlandLight },
+    { u: 0.82, v: 0.328, scale: 0.90, color: colInlandGreen },
+    { u: 0.86, v: 0.328, scale: 0.85, color: colInlandLight },
+    { u: 0.90, v: 0.328, scale: 0.88, color: colInlandGreen },
+    { u: 0.94, v: 0.328, scale: 0.85, color: colInlandLight },
+    { u: 0.71, v: 0.72,  scale: 1.05, color: colInlandGreen },
+    { u: 0.77, v: 0.50,  scale: 0.85, color: colInlandLight },
+    { u: 0.77, v: 0.58,  scale: 0.85, color: colInlandGreen },
+    { u: 0.77, v: 0.66,  scale: 0.85, color: colInlandLight }
   ];
 
   isolatedUVs.forEach((pt) => {

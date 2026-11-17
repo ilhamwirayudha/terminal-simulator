@@ -20,11 +20,15 @@ export function createAreaJalan(scene) {
   const areaJalanGroup = new THREE.Group();
   areaJalanGroup.name = 'area_jalan';
 
-  // 1. Tambahkan Ruas Akses Osowilangun
-  areaJalanGroup.add(createJalanAksesOsowilangun());
+  // 1. Tambahkan Ruas Akses Osowilangun (Digeser -55m mengikuti perpanjangan Pre-Gate & Utilitas 205m)
+  const aksesOsowilangun = createJalanAksesOsowilangun();
+  aksesOsowilangun.position.z = -55.0;
+  areaJalanGroup.add(aksesOsowilangun);
 
-  // 2. Tambahkan Ruas Jembatan Laut Melengkung
-  areaJalanGroup.add(createJembatanLaut());
+  // 2. Tambahkan Ruas Jembatan Laut Melengkung 680m (Z: -110 s/d +570)
+  const jembatanLaut = createJembatanLaut();
+  jembatanLaut.position.z = -55.0;
+  areaJalanGroup.add(jembatanLaut);
 
   // 3. Tambahkan Ruas Jalan Pre-Gate
   areaJalanGroup.add(createJalanPreGate());

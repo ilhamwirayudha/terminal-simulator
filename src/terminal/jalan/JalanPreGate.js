@@ -122,15 +122,15 @@ export function createJalanPreGate() {
 
 
   // ============================================================================
-  // 1. ABUTMEN JEMBATAN LAUT (Z = 623.5)
+  // 1. ABUTMEN JEMBATAN LAUT (Z = 568.5, digeser -55m mengikuti lebar Utilitas 205m)
   // ============================================================================
   const bridgeAbutmentIsland = new THREE.Mesh(new THREE.BoxGeometry(16.0, 2.4, 5.0), seawallMat);
-  bridgeAbutmentIsland.position.set(0, -0.8, 623.5);
+  bridgeAbutmentIsland.position.set(0, -0.8, 568.5);
   bridgeAbutmentIsland.receiveShadow = true;
   preGateGroup.add(bridgeAbutmentIsland);
 
   // ============================================================================
-  // 2. TRANSISI PELEBARAN AWAL DARI JEMBATAN KE JALAN (Z: 625 s/d 660)
+  // 2. TRANSISI PELEBARAN AWAL DARI JEMBATAN KE JALAN (Z: 570 s/d 605)
   // Jembatan (Lebar 16m: X in [-8, +8]) melebar ke koridor awal (X: -13.3 s/d +13.3)
   // ============================================================================
   const numFlareSteps = 24;
@@ -139,21 +139,21 @@ export function createJalanPreGate() {
 
   const getInboundEdgeTrans = (z) => {
     // SISI KIRI (Barat Laut / +X): Melebar dari +7.8m ke +13.3m
-    const u = Math.min(Math.max((z - 625) / 35.0, 0), 1);
+    const u = Math.min(Math.max((z - 570) / 35.0, 0), 1);
     const s = u * u * (3 - 2 * u);
     return 7.8 + 5.5 * s;
   };
 
   const getOutboundEdgeTrans = (z) => {
     // SISI KANAN (Tenggara / -X): Melebar dari -7.8m ke -13.3m
-    const u = Math.min(Math.max((z - 625) / 35.0, 0), 1);
+    const u = Math.min(Math.max((z - 570) / 35.0, 0), 1);
     const s = u * u * (3 - 2 * u);
     return -7.8 - 5.5 * s;
   };
 
   for (let i = 0; i < numFlareSteps; i++) {
-    const z1 = 625 + (i / numFlareSteps) * 35;
-    const z2 = 625 + ((i + 1) / numFlareSteps) * 35;
+    const z1 = 570 + (i / numFlareSteps) * 35;
+    const z2 = 570 + ((i + 1) / numFlareSteps) * 35;
     const xIn1 = getInboundEdgeTrans(z1);
     const xOut1 = getOutboundEdgeTrans(z1);
     const xIn2 = getInboundEdgeTrans(z2);
@@ -175,8 +175,8 @@ export function createJalanPreGate() {
 
   // Kanstin Transisi Awal
   for (let i = 0; i < 15; i++) {
-    const z1 = 625 + (i / 15) * 35;
-    const z2 = 625 + ((i + 1) / 15) * 35;
+    const z1 = 570 + (i / 15) * 35;
+    const z2 = 570 + ((i + 1) / 15) * 35;
     const midZ = (z1 + z2) / 2;
     const len = z2 - z1;
 
@@ -204,18 +204,18 @@ export function createJalanPreGate() {
   }
 
   // Marka Chevron Gore Pemisah Jalur Masuk & Keluar Awal
-  createTaperLine(-1.3, 0.0, 656, 627, whiteLineMat, 0.22);
-  createTaperLine(1.3, 0.0, 656, 627, whiteLineMat, 0.22);
+  createTaperLine(-1.3, 0.0, 601, 572, whiteLineMat, 0.22);
+  createTaperLine(1.3, 0.0, 601, 572, whiteLineMat, 0.22);
 
   // ============================================================================
-  // 3. SISI KIRI (BARAT LAUT / +X): JALUR MASUK SEGMEN 1 (3 LAJUR: Z in [660, 775])
-  // Lebar 12.0m: X in [1.3, 13.3] (Tampak di Gambar 1)
+  // 3. SISI KIRI (BARAT LAUT / +X): JALUR MASUK SEGMEN 1 (3 LAJUR: Z in [605, 775])
+  // Lebar 12.0m: X in [1.3, 13.3] (Diperpanjang 55m mengikuti lebar Utilitas 205m)
   // - Lajur 3 (Delivery / sisi median): X in [1.3, 4.9]
   // - Lajur 2 (Receiving / tengah): X in [4.9, 8.5]
   // - Lajur 1 (Umum/Curah Kering / luar): X in [8.5, 12.1]
   // ============================================================================
-  const seg1Len = 775.0 - 660.0; // 115m
-  const seg1MidZ = (660.0 + 775.0) / 2;
+  const seg1Len = 775.0 - 605.0; // 170m
+  const seg1MidZ = (605.0 + 775.0) / 2;
 
   const seg1Inbound = new THREE.Mesh(new THREE.PlaneGeometry(12.0, seg1Len), portRoadPavementMat);
   seg1Inbound.rotation.x = -Math.PI / 2;
@@ -225,7 +225,7 @@ export function createJalanPreGate() {
 
   // Marka Garis Putus-putus Segmen 1 (+4.9m & +8.5m)
   [4.9, 8.5].forEach((lx) => {
-    for (let z = 660; z < 775; z += 9.0) {
+    for (let z = 605; z < 775; z += 9.0) {
       addDashQuad(lx, z + 1.75);
     }
   });
@@ -248,7 +248,7 @@ export function createJalanPreGate() {
   preGateGroup.add(seg1Curb);
 
   // Panah Marka Jalan Segmen 1 (Masuk: Forward / +Z)
-  [680, 725].forEach((z) => {
+  [625, 675, 725].forEach((z) => {
     addRoadArrow(3.1, z, true);  // Lajur 3: Delivery
     addRoadArrow(6.7, z, true);  // Lajur 2: Receiving
     addRoadArrow(10.3, z, true); // Lajur 1: Umum / Curah Kering
@@ -437,11 +437,11 @@ export function createJalanPreGate() {
   preGateGroup.add(exitPortal);
 
   // ============================================================================
-  // 6. SISI KANAN (TENGGARA / -X): JALUR KELUAR (3 LAJUR MENERUS: Z in [660, 1168])
+  // 6. SISI KANAN (TENGGARA / -X): JALUR KELUAR (3 LAJUR MENERUS: Z in [605, 1168])
   // TIDAK ADA PELEBARAN SAMA SEKALI: Lurus konsisten 3 lajur menerus (X: -13.3 s/d -1.3)
   // ============================================================================
-  const outLen = 1168.0 - 660.0;
-  const outMidZ = (660.0 + 1168.0) / 2;
+  const outLen = 1168.0 - 605.0;
+  const outMidZ = (605.0 + 1168.0) / 2;
 
   const outboundRoad = new THREE.Mesh(new THREE.PlaneGeometry(12.0, outLen), portRoadPavementMat);
   outboundRoad.rotation.x = -Math.PI / 2;
@@ -451,7 +451,7 @@ export function createJalanPreGate() {
 
   // Marka Garis Putus-putus Lajur Keluar (-4.9m, -8.5m)
   [-4.9, -8.5].forEach((lx) => {
-    for (let z = 660; z < 1168; z += 9.0) {
+    for (let z = 605; z < 1168; z += 9.0) {
       addDashQuad(lx, z + 1.75);
     }
   });
@@ -467,14 +467,23 @@ export function createJalanPreGate() {
   outOuterLine.position.set(-13.1, yRoad + 0.006, outMidZ);
   preGateGroup.add(outOuterLine);
 
-  // Kanstin Tepi Luar Kanan (Outbound)
-  const outCurb = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, outLen), curbHazardWhiteMat);
-  outCurb.position.set(-13.3, yRoad + 0.11, outMidZ);
-  outCurb.castShadow = true;
-  preGateGroup.add(outCurb);
+  // Kanstin Tepi Luar Kanan (Outbound) - Dibuka di Akses Masuk & Keluar Head Office (Z: 673-682 & Z: 708-717)
+  const outCurbSegs = [
+    { start: 605.0, end: 673.0 },
+    { start: 682.0, end: 708.0 }, // Di depan Pulau Taman Segitiga Head Office
+    { start: 717.0, end: 1168.0 }
+  ];
+  outCurbSegs.forEach((seg) => {
+    const cLen = seg.end - seg.start;
+    const cMidZ = (seg.start + seg.end) / 2;
+    const outCurbSeg = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, cLen), curbHazardWhiteMat);
+    outCurbSeg.position.set(-13.3, yRoad + 0.11, cMidZ);
+    outCurbSeg.castShadow = true;
+    preGateGroup.add(outCurbSeg);
+  });
 
   // Panah Marka Jalan Jalur Keluar (Keluar: Reverse / -Z)
-  [690, 740, 840, 920, 1000, 1100].forEach((z) => {
+  [635, 690, 740, 840, 920, 1000, 1100].forEach((z) => {
     addRoadArrow(-3.1, z, false);
     addRoadArrow(-6.7, z, false);
     addRoadArrow(-10.3, z, false);
@@ -484,11 +493,11 @@ export function createJalanPreGate() {
   // 7. MEDIAN TENGAH BERKANSTIN DENGAN BARISAN POHON RINDANG PENUH
   // ============================================================================
   // Pulau Median Penuh Berkanstin (createMedianIsland)
-  preGateGroup.add(createMedianIsland({ startZ: 656, endZ: 1168, centerX: 0, width: 2.6, y: yRoad }));
+  preGateGroup.add(createMedianIsland({ startZ: 601, endZ: 1168, centerX: 0, width: 2.6, y: yRoad }));
 
   // Barisan Pohon Rindang di Sepanjang Median Jalan (createMedianTree)
   // Sterilkan area portal & kanopi pre-gate (Z in [920, 990]) agar tidak menabrak atap & tiang
-  for (let z = 662.0; z <= 1162.0; z += 14.0) {
+  for (let z = 606.0; z <= 1162.0; z += 14.0) {
     if (z >= 920.0 && z <= 990.0) continue;
     const tree = createMedianTree({
       scale: 0.95 + Math.sin(z * 0.1) * 0.15,

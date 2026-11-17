@@ -6,146 +6,129 @@ import { createEnvironment } from './world/environment.js';
 import { createHighwaySignage } from './world/Signage.js';
 import { createAreaJalan } from './terminal/jalan/index.js';
 import { createBufferArea } from './terminal/bufferArea/index.js';
+import { createKantorArea } from './terminal/kantor/index.js';
 import { createContainerYardArea } from './terminal/containerYard/index.js';
 import { createCurahKeringArea } from './terminal/curahKering/index.js';
 import { createDermagaArea } from './terminal/dermaga/index.js';
-import { TruckManager } from './vehicles/TruckManager.js';
+import {
+  OPERATIONAL_SECTORS,
+  resolveOperationalSector
+} from './terminal/SectorRegistry.js';
 import { CameraManager } from './camera/CameraManager.js';
 import { SelectionManager } from './simulation/SelectionManager.js';
+import { SimClock } from './simulation/SimClock.js';
+import { SectorDataStore } from './simulation/SectorDataStore.js';
 import { InformationPanel } from './ui/InformationPanel.js';
+import { NavigationHUD } from './ui/NavigationHUD.js';
+import { SectorMarkersOverlay } from './ui/SectorMarkersOverlay.js';
 import { CompassWidget } from './ui/CompassWidget.js';
 import { simToGps, gpsToSim, formatGps } from './world/GeoProjection.js';
 
 /**
  * ==============================================================================
- * MAIN APPLICATION ENTRY POINT (Terminal Teluk Lamong)
+ * MAIN APPLICATION ENTRY POINT (Terminal Teluk Lamong 3D Simulator)
  * ==============================================================================
  */
 
-// 1. Find DOM elements for UI overlay
 const canvas = document.querySelector('#webgl-canvas');
-const btnFollowToggle = document.querySelector('#btn-follow-toggle');
-const btnFollowText = document.querySelector('#btn-follow-text');
-const cameraStatusBadge = document.querySelector('#camera-status-badge');
-const chipButtons = document.querySelectorAll('.chip-truck');
 
-// 2. Initialize the 3D Scene, Camera, WebGLRenderer, and OrbitControls
+// 1. Initialize 3D Scene, Camera, Renderer, and Lights
 const { scene, camera, renderer, controls } = createScene(canvas);
-
-// 3. Set up daylight lighting
 setupLights(scene);
 
-// 4. Create the Mainland Environment
-createEnvironment(scene);
+// 2. Build 3D World Environment & Terminal Facilities
+const mainlandEnvGroup = createEnvironment(scene);
+mainlandEnvGroup.position.z = -55.0;
 
-// 5. Create Area Jalan (Osowilangun, Jembatan Laut, & Jalan Pre-Gate)
 createAreaJalan(scene);
-
-// 6. Create Zona Buffer Barat (Utilitas, Waiting CY, Waiting Cuker: Z in [604.5, 1220+])
 createBufferArea(scene);
-
-// 6b. Create Area Gerbang & Kantor Utama (Main Gate Z: 1168 s/d 1699)
-// 6b. Create Area Container Yard Utama (Z: 1836.3 s/d 2478.4 | X: -21.4 s/d -676.1)
+createKantorArea(scene);
 createContainerYardArea(scene);
-
-// 6c. Create Area Terminal Curah Kering (Z: 2117.6 s/d 2482.1 | X: +21.4 s/d +363.2)
 createCurahKeringArea(scene);
-
-// 6d. Create Area Jembatan Penghubung (Trestle), Sea Conveyor & Dermaga Terpadu (Z: 2436 s/d 3516)
 createDermagaArea(scene);
 
-// 7. Create Highway Entry/Exit Signage
-createHighwaySignage(scene);
+const signageGroup = createHighwaySignage(scene);
+signageGroup.position.z = -55.0;
 
-// 6. Route Waypoints for Mainland Corridor (Osowilangon Z = -1080 to Bridge Abutment Z = -58)
-const terminalWaypoints = [
-  { x:  13.8, y: 0.81, z: -1080 },
-  { x:  13.8, y: 0.81, z:  -775 },
-  { x:  13.8, y: 0.81, z:  -400 },
-  { x:  13.8, y: 0.81, z:  -180 },
-  { x:  13.8, y: 0.81, z:   -58 },
-  { x: -13.8, y: 0.81, z:   -58 },
-  { x: -13.8, y: 0.81, z:  -180 },
-  { x: -13.8, y: 0.81, z:  -400 },
-  { x: -13.8, y: 0.81, z:  -775 },
-  { x: -13.8, y: 0.81, z: -1080 }
-];
-
-// 7. Instantiate TruckManager (Fleet empty for layout development)
-const truckManager = new TruckManager(scene, terminalWaypoints);
-const fleetTrucks = truckManager.getTrucks();
-
-// 8. Initialize Raycaster SelectionManager
-const selectionManager = new SelectionManager(canvas, camera);
-fleetTrucks.forEach((t) => selectionManager.registerSelectable(t));
-
-// 9. Initialize Unified CameraManager (Pure First-Person POV)
+// 3. Initialize Core Controllers & Data Store
 const cameraManager = new CameraManager(camera, controls);
+cameraManager.setupMouseListeners(canvas);
 window.cameraManager = cameraManager;
-cameraManager.setupFPSMouseListeners(canvas);
 
-// 10. Initialize Operational InformationPanel Dashboard
-const infoPanel = new InformationPanel();
+const simClock = new SimClock();
+const sectorDataStore = new SectorDataStore();
+window.sectorDataStore = sectorDataStore;
 
-// 11. Initialize Apple Maps / WGS84 Calibrated Compass Widget (Arah Mata Angin)
+const selectionManager = new SelectionManager(canvas, camera, scene);
+const infoPanel = new InformationPanel(sectorDataStore);
 const compassWidget = new CompassWidget(camera, cameraManager, controls);
 
-function updateCameraUI() {
-  const isFollowing = cameraManager.getMode() === 'FOLLOW';
-
-  if (cameraStatusBadge) {
-    if (isFollowing) {
-      const activeSelected = selectionManager.getSelected() || fleetTrucks[0];
-      if (activeSelected) {
-        if (btnFollowText) btnFollowText.textContent = 'Stop Following';
-        btnFollowToggle?.classList.add('active');
-        cameraStatusBadge.textContent = `● FOLLOWING ${activeSelected.id}`;
-        cameraStatusBadge.className = 'camera-badge badge-following';
-      }
-    } else {
-      if (btnFollowText) btnFollowText.textContent = 'Follow Truck';
-      btnFollowToggle?.classList.remove('active');
-      cameraStatusBadge.textContent = cameraManager.getBadgeText();
-      cameraStatusBadge.className = 'camera-badge badge-overview';
-    }
+const sectorMarkers = new SectorMarkersOverlay({
+  camera,
+  dataStore: sectorDataStore,
+  onSelectSector: (sectorId) => {
+    selectionManager.selectSector(sectorId, { source: 'pin' });
   }
-}
-
-if (btnFollowToggle) {
-  btnFollowToggle.addEventListener('click', () => {
-    const targetTruck = selectionManager.getSelected() || fleetTrucks[0];
-    if (targetTruck) {
-      cameraManager.toggleFollow(targetTruck);
-      updateCameraUI();
-    }
-  });
-}
-
-// Dedicated Reset Camera Position Button
-const btnResetCamera = document.getElementById('btn-reset-camera');
-if (btnResetCamera) {
-  btnResetCamera.addEventListener('click', () => {
-    sessionStorage.removeItem('ttl_camera_state');
-    cameraManager.setStation('OVERVIEW');
-    updateCameraUI();
-  });
-}
-
-// Quick Camera Station Switcher Buttons
-document.querySelectorAll('.btn-station').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const station = btn.getAttribute('data-station');
-    if (station && cameraManager) {
-      sessionStorage.removeItem('ttl_camera_state');
-      cameraManager.setStation(station);
-      updateCameraUI();
-    }
-  });
 });
 
-// Immediately sync UI with restored/current camera state
-updateCameraUI();
+const navHud = new NavigationHUD({
+  camera,
+  cameraManager,
+  simClock,
+  onSelectSector: (sectorId) => {
+    selectionManager.selectSector(sectorId, { source: 'hud' });
+  },
+  onTogglePins: () => {
+    const next = !sectorMarkers.isEnabled();
+    sectorMarkers.setEnabled(next);
+    return next;
+  }
+});
 
+// 4. Unified Sector Selection & Sequential Stepping (1..5, [, ])
+function stepSector(delta) {
+  const active = selectionManager.getSelectedSector();
+  let nextIdx = 0;
+  if (active) {
+    const curIdx = OPERATIONAL_SECTORS.findIndex((s) => s.id === active.id);
+    nextIdx = (curIdx + delta + OPERATIONAL_SECTORS.length) % OPERATIONAL_SECTORS.length;
+  } else if (delta < 0) {
+    nextIdx = OPERATIONAL_SECTORS.length - 1;
+  }
+  selectionManager.selectSector(OPERATIONAL_SECTORS[nextIdx].id, { source: 'step' });
+}
+
+selectionManager.onSelectionChange = (sector, meta = {}) => {
+  const sectorId = sector ? sector.id : null;
+  infoPanel.render(sector);
+  navHud.setActiveSector(sectorId);
+  sectorMarkers.setActiveSector(sectorId);
+
+  if (sector && !(meta.source === '3d' && meta.wasAlreadySelected)) {
+    cameraManager.focusSector(sector);
+  }
+};
+
+infoPanel.onFocusRequest = (sector) => {
+  if (sector) cameraManager.focusSector(sector);
+};
+
+infoPanel.onCloseRequest = () => {
+  selectionManager.deselect({ source: 'panel' });
+};
+
+infoPanel.onStepRequest = (delta) => stepSector(delta);
+
+cameraManager.onSelectSectorIndex = (idx) => {
+  const targetSector = OPERATIONAL_SECTORS[idx];
+  if (targetSector) {
+    selectionManager.selectSector(targetSector.id, { source: 'hotkey' });
+  }
+};
+
+cameraManager.onStepSector = (delta) => stepSector(delta);
+
+// 5. Collapsible HUD Panels
 function setupPanelToggle(btnId, panelId) {
   const btn = document.querySelector(btnId);
   const panel = document.querySelector(panelId);
@@ -161,17 +144,13 @@ function setupPanelToggle(btnId, panelId) {
   });
 }
 
-setupPanelToggle('#btn-collapse-header', '#panel-header');
-setupPanelToggle('#btn-collapse-dashboard', '#panel-dashboard');
-setupPanelToggle('#btn-collapse-controls', '#panel-controls');
 setupPanelToggle('#btn-collapse-gps', '#panel-gps');
+setupPanelToggle('#btn-collapse-minimap', '#panel-minimap');
+setupPanelToggle('#btn-collapse-controls', '#panel-controls');
 
-// ----------------------------------------------------------------------------
-// Realtime GPS Telemetry & Teleport Controller
-// ----------------------------------------------------------------------------
+// 6. Realtime GPS Telemetry & Teleport Controller
 const elGpsLat = document.getElementById('gps-lat-val');
 const elGpsLon = document.getElementById('gps-lon-val');
-const elGpsBearing = document.getElementById('gps-bearing-val');
 const elGpsSim = document.getElementById('gps-sim-val');
 const elGpsZone = document.getElementById('gps-zone-val');
 const btnCopyGps = document.getElementById('btn-copy-gps');
@@ -183,22 +162,9 @@ let lastGpsLat = null;
 let lastGpsLon = null;
 let lastGpsUpdate = 0;
 
-function getZoneName(z) {
-  if (z <= -1020) return 'Akses Osowilangon';
-  if (z <= -792)  return 'Flyover Tol Romokalisari';
-  if (z <= -680)  return 'Merge Tol & Darat';
-  if (z <= -230)  return 'Koridor Utama 3 Lajur';
-  if (z <= -140)  return 'Pos Keamanan TTL';
-  if (z <= -55)   return 'Gardu PLN & Abutmen';
-  if (z < 700)    return 'Causeway 1 (Jembatan)';
-  if (z < 2482)   return 'Terminal Teluk Lamong (CY & Cuker)';
-  if (z < 3430)   return 'Jembatan Trestle & Sea Conveyor';
-  return 'Dermaga Petikemas & Curah Kering';
-}
-
 function updateGpsTelemetry() {
   const now = performance.now();
-  if (now - lastGpsUpdate < 80) return; // Throttled to ~12fps for performance
+  if (now - lastGpsUpdate < 80) return;
   lastGpsUpdate = now;
 
   const posX = camera.position.x;
@@ -211,118 +177,99 @@ function updateGpsTelemetry() {
 
   if (elGpsLat) elGpsLat.textContent = latStr;
   if (elGpsLon) elGpsLon.textContent = lonStr;
-  if (elGpsBearing && compassWidget) {
-    const { bearingDeg, cardinal, cardinalFull } = compassWidget.getCurrentBearing();
-    elGpsBearing.textContent = `${bearingDeg.toFixed(1)}° ${cardinal} (${cardinalFull})`;
-  }
   if (elGpsSim) {
-    elGpsSim.textContent = `X: ${posX.toFixed(1)}m | Z: ${posZ.toFixed(1)}m | Alt: ${posY.toFixed(1)}m`;
+    elGpsSim.textContent = `X:${posX.toFixed(0)}m | Z:${posZ.toFixed(0)}m | Alt:${posY.toFixed(0)}m`;
   }
   if (elGpsZone) {
-    elGpsZone.textContent = getZoneName(posZ);
+    const activeSector = resolveOperationalSector(posX, posZ);
+    if (activeSector) {
+      elGpsZone.textContent = activeSector.name;
+      elGpsZone.style.borderColor = activeSector.accentColor;
+      elGpsZone.style.color = '#f8fafc';
+    } else {
+      elGpsZone.textContent = 'Area Lingkungan';
+      elGpsZone.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+      elGpsZone.style.color = '#94a3b8';
+    }
   }
 }
 
-// Copy Real GPS Coordinates to Clipboard
 if (btnCopyGps) {
   btnCopyGps.addEventListener('click', async () => {
-    if (lastGpsLat !== null && lastGpsLon !== null) {
-      const gpsStr = formatGps(lastGpsLat, lastGpsLon);
-      try {
-        await navigator.clipboard.writeText(gpsStr);
-        btnCopyGps.textContent = '✅ Koordinat Tersalin!';
-        setTimeout(() => {
-          btnCopyGps.textContent = '📋 Salin Koordinat GPS';
-        }, 1600);
-      } catch (err) {
-        btnCopyGps.textContent = gpsStr;
-      }
+    if (lastGpsLat === null || lastGpsLon === null) return;
+    const gpsStr = formatGps(lastGpsLat, lastGpsLon);
+    try {
+      await navigator.clipboard.writeText(gpsStr);
+      btnCopyGps.textContent = 'Tersalin';
+      setTimeout(() => {
+        btnCopyGps.textContent = 'Salin';
+      }, 1500);
+    } catch {
+      btnCopyGps.textContent = 'Gagal';
     }
   });
 }
 
-// Teleport Camera to Given Real-World GPS Coordinates
 function handleTeleport() {
   if (!inputTeleport) return;
   const raw = inputTeleport.value.trim();
   if (!raw) return;
 
-  const parts = raw.split(/[\s,]+/).map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+  const parts = raw
+    .split(/[\s,]+/)
+    .map((p) => parseFloat(p.trim()))
+    .filter((p) => !Number.isNaN(p));
+
   if (parts.length < 2) {
     if (elTeleportFeedback) {
       elTeleportFeedback.className = 'teleport-feedback error';
-      elTeleportFeedback.textContent = '❌ Format salah. Contoh: -7.21512, 112.65411';
+      elTeleportFeedback.textContent = 'Format salah. Contoh: -7.20417, 112.66889';
     }
     return;
   }
 
-  const lat = parts[0];
-  const lon = parts[1];
-
+  const [lat, lon] = parts;
   if (lat < -10 || lat > -5 || lon < 110 || lon > 115) {
     if (elTeleportFeedback) {
       elTeleportFeedback.className = 'teleport-feedback error';
-      elTeleportFeedback.textContent = '❌ Di luar area Surabaya/TTL (-7.2°, 112.6°)';
+      elTeleportFeedback.textContent = 'Koordinat di luar area Surabaya / TTL';
     }
     return;
   }
 
   const { x, z } = gpsToSim(lat, lon);
-  const groundY = cameraManager.getGroundHeight(x, z);
-  const targetY = Math.max(groundY + 1.2, 1.8);
-  const camY = Math.max(targetY + 18.0, 22.0);
-
-  sessionStorage.removeItem('ttl_camera_state');
-  cameraManager.transitionTo(
-    new THREE.Vector3(x + 14.0, camY, z - 32.0),
-    new THREE.Vector3(x, targetY, z),
-    1.2
-  );
+  cameraManager.focusCoordinate(x, z);
 
   if (elTeleportFeedback) {
     elTeleportFeedback.className = 'teleport-feedback success';
-    elTeleportFeedback.textContent = `➔ Teleport ke (${x.toFixed(1)}m, ${z.toFixed(1)}m)`;
+    elTeleportFeedback.textContent = `Menuju (${x.toFixed(1)}m, ${z.toFixed(1)}m)`;
     setTimeout(() => {
       elTeleportFeedback.textContent = '';
-    }, 3200);
+    }, 3000);
   }
 }
 
-if (btnTeleport) {
-  btnTeleport.addEventListener('click', handleTeleport);
-}
-if (inputTeleport) {
-  inputTeleport.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleTeleport();
-  });
-}
+btnTeleport?.addEventListener('click', handleTeleport);
+inputTeleport?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleTeleport();
+});
 
+// 7. Animation Loop
 const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
 
-  const deltaTime = clock.getDelta();
+  const realDelta = clock.getDelta();
+  simClock.update(realDelta);
 
-  // Update fleet vehicles (empty during layout development)
-  truckManager.update(deltaTime, null, null, null);
-
-  // Update Camera Manager
-  cameraManager.update(deltaTime);
-
-  // Update Realtime GPS Coordinates & Telemetry
+  cameraManager.update(realDelta);
   updateGpsTelemetry();
-
-  // Update Compass Arah Mata Angin
   compassWidget.update();
+  navHud.update();
+  sectorMarkers.update();
 
-  // Update Operational Information Dashboard
-  const activeSelected = selectionManager.getSelected() || fleetTrucks[0] || null;
-  infoPanel.update(activeSelected, cameraManager, null, null, fleetTrucks);
-
-  // Render Scene
   renderer.render(scene, camera);
 }
 
-// Start animation loop
 animate();

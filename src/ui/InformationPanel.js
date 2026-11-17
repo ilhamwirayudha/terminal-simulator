@@ -1,191 +1,346 @@
-import { TruckState } from '../simulation/StateMachine.js';
+import { EQUIPMENT_LIMITS } from '../simulation/SectorDataStore.js';
+
+function createMetricRow(label, value, highlight = false) {
+  const row = document.createElement('div');
+  row.className = 'sector-metric-row';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'metric-label';
+  lbl.textContent = label;
+
+  const val = document.createElement('span');
+  val.className = highlight ? 'metric-value is-highlight' : 'metric-value';
+  val.textContent = value;
+
+  row.appendChild(lbl);
+  row.appendChild(val);
+  return row;
+}
+
+function createReadinessChip(label, active, max = null, unit = '') {
+  const chip = document.createElement('div');
+  chip.className = 'readiness-chip';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'chip-lbl';
+  lbl.textContent = label;
+
+  const val = document.createElement('span');
+  val.className = 'chip-val';
+  if (max === null) {
+    val.textContent = `${active}${unit}`;
+  } else {
+    val.textContent = unit ? `${active}/${max}${unit}` : `${active}/${max}`;
+  }
+
+  chip.appendChild(lbl);
+  chip.appendChild(val);
+  return chip;
+}
+
+function createProgressLine(label, done, total, colorClass = '') {
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'vessel-progress-row';
+
+  const head = document.createElement('div');
+  head.className = 'vessel-progress-head';
+
+  const lblEl = document.createElement('span');
+  lblEl.textContent = label;
+
+  const valEl = document.createElement('span');
+  valEl.className = 'mono-val';
+  valEl.textContent = `${done}/${total} (${pct}%)`;
+
+  head.appendChild(lblEl);
+  head.appendChild(valEl);
+
+  const track = document.createElement('div');
+  track.className = 'progress-track';
+
+  const fill = document.createElement('div');
+  fill.className = `progress-fill ${colorClass}`.trim();
+  fill.style.width = `${pct}%`;
+
+  track.appendChild(fill);
+  wrap.appendChild(head);
+  wrap.appendChild(track);
+  return wrap;
+}
 
 /**
  * ==============================================================================
- * InformationPanel (Terminal Teluk Lamong Telemetry Dashboard - 4-Zone Layout)
+ * InformationPanel.js (Panel Activity-by-Data & Kesiapan Alat per Sektor)
  * ==============================================================================
  */
 export class InformationPanel {
-  constructor() {
-    this.activeTab = 'LOCATION'; // Defaults to Location Intel for layout development
+  constructor(dataStore) {
+    this.dataStore = dataStore;
 
-    this.tabTruckBtn = document.querySelector('#tab-truck-btn');
-    this.tabLocationBtn = document.querySelector('#tab-location-btn');
-    this.viewTruck = document.querySelector('#view-truck-intel');
-    this.viewLocation = document.querySelector('#view-location-intel');
+    this.panelEl = document.getElementById('sector-activity-panel');
+    this.dotEl = document.getElementById('sector-accent-dot');
+    this.nameEl = document.getElementById('sector-name');
+    this.statusEl = document.getElementById('sector-status-badge');
+    this.codeEl = document.getElementById('sector-code-badge');
 
-    this.telId = document.querySelector('#tel-id');
-    this.telStateBadge = document.querySelector('#tel-state-badge');
-    this.telContainer = document.querySelector('#tel-container');
-    this.telLocation = document.querySelector('#tel-location');
-    this.telOperation = document.querySelector('#tel-operation');
-    this.telDestination = document.querySelector('#tel-destination');
-    this.telSpeed = document.querySelector('#tel-speed');
+    this.activeContainer = document.getElementById('sector-active-block');
+    this.doneContainer = document.getElementById('sector-done-block');
+    this.readinessContainer = document.getElementById('sector-readiness-block');
 
-    this.timelineNodes = document.querySelectorAll('.timeline-step');
+    this.btnPrev = document.getElementById('btn-sector-prev');
+    this.btnNext = document.getElementById('btn-sector-next');
+    this.btnFocus = document.getElementById('btn-sector-focus');
+    this.btnClose = document.getElementById('btn-sector-close');
 
-    this.locName = document.querySelector('#loc-name');
-    this.locType = document.querySelector('#loc-type');
-    this.locOperation = document.querySelector('#loc-operation');
-    this.locEquipment = document.querySelector('#loc-equipment');
-    this.locActiveTruck = document.querySelector('#loc-active-truck');
-    this.locNextEvent = document.querySelector('#loc-next-event');
+    this.currentSector = null;
+    this.onFocusRequest = null;
+    this.onCloseRequest = null;
+    this.onStepRequest = null;
 
-    this._initTabs();
-    this.switchTab('LOCATION');
-  }
-
-  _initTabs() {
-    if (this.tabTruckBtn && this.tabLocationBtn) {
-      this.tabTruckBtn.addEventListener('click', () => this.switchTab('TRUCK'));
-      this.tabLocationBtn.addEventListener('click', () => this.switchTab('LOCATION'));
-    }
-  }
-
-  switchTab(tabName) {
-    this.activeTab = tabName;
-
-    if (tabName === 'TRUCK') {
-      this.tabTruckBtn?.classList.add('active');
-      this.tabLocationBtn?.classList.remove('active');
-      if (this.viewTruck) this.viewTruck.style.display = 'block';
-      if (this.viewLocation) this.viewLocation.style.display = 'none';
-    } else {
-      this.tabLocationBtn?.classList.add('active');
-      this.tabTruckBtn?.classList.remove('active');
-      if (this.viewLocation) this.viewLocation.style.display = 'block';
-      if (this.viewTruck) this.viewTruck.style.display = 'none';
-    }
-  }
-
-  update(truck, cameraManager, inGate, outGate, fleetTrucks = []) {
-    this._updateLocationIntel(cameraManager, inGate, outGate, fleetTrucks);
-
-    if (!truck) {
-      if (this.telId) this.telId.textContent = 'LAYOUT DEVELOPMENT MODE';
-      if (this.telStateBadge) {
-        this.telStateBadge.textContent = 'STANDBY';
-        this.telStateBadge.className = 'state-badge badge-clearance';
+    this._initEvents();
+    this.dataStore?.onChange(() => {
+      if (this.currentSector) {
+        this.render(this.currentSector);
       }
-      if (this.telContainer) this.telContainer.textContent = 'N/A';
-      if (this.telLocation) this.telLocation.textContent = 'Terminal Teluk Lamong Complex';
-      if (this.telOperation) this.telOperation.textContent = '3D Environment & Layout Engineering';
-      if (this.telDestination) this.telDestination.textContent = 'Zone Infrastructure Inspection';
-      if (this.telSpeed) this.telSpeed.textContent = '0.0 m/s';
-      return;
-    }
+    });
 
-    const truckPos = truck.getPosition();
-    const truckState = truck.getState();
-    const telemetry = truck.getTelemetry();
-
-    const locationName = this._getDynamicLocationName(truckPos, truckState);
-    const destinationName = this._getDestinationName(truckPos, truckState, telemetry.mission);
-
-    if (this.telId) this.telId.textContent = `${truck.id} [${telemetry.mission === 'UNLOAD' ? 'DELIVERY' : 'PICKUP'}]`;
-    if (this.telStateBadge) {
-      this.telStateBadge.textContent = telemetry.label;
-      this.telStateBadge.className = `state-badge ${telemetry.badgeClass}`;
-    }
-    if (this.telContainer) this.telContainer.textContent = truck.getContainerNumber();
-    if (this.telLocation) this.telLocation.textContent = locationName;
-    if (this.telOperation) this.telOperation.textContent = telemetry.description;
-    if (this.telDestination) this.telDestination.textContent = destinationName;
-    if (this.telSpeed) {
-      const isStopped = truckState === TruckState.GATE_INSPECTION || truckState === TruckState.CY_TRANSFER || truck.speed <= 0.01;
-      this.telSpeed.textContent = isStopped ? '0.0 m/s (Halted / Dwell)' : `${truck.speed.toFixed(1)} m/s (Active)`;
-    }
-
-    this._updateTimeline(truckState, truckPos);
+    this.render(null);
   }
 
-  _getDynamicLocationName(pos, state) {
-    if (pos.z < -170) return 'Zone A: Mainland Access Highway';
-    if (pos.z >= -170 && pos.z < -110) return 'Bridge 1: Mainland-to-Small-Island Causeway';
-    if (pos.z >= -110 && pos.z < -30) {
-      if (state === TruckState.GATE_INSPECTION) return 'Zone B: Small Island In-Gate 01 (Weighbridge & Security Scan)';
-      if (state === TruckState.GATE_CLEARANCE) return 'Zone B: Small Island In-Gate 01 (Portal Clearance)';
-      return 'Zone B: Small Island (Head Office & Waiting Area)';
-    }
-    if (pos.z >= -30 && pos.z < 20) return 'Bridge 2: Inter-Island Connector Bridge';
-    if (pos.z >= 20 && pos.z < 120) {
-      if (state === TruckState.CY_TRANSFER) return 'Zone C: Large Island Container Yard (Reach Stacker Bay)';
-      return 'Zone C: Large Island Container Yard (CY)';
-    }
-    if (pos.z >= 120 && pos.z < 250) return 'Bridge 3: Long Offshore Trestle (Over Deep Sea)';
-    if (pos.z >= 250) return 'Zone D: Offshore Quay (STS Super Post-Panamax & Vessel Berth)';
-
-    return 'Terminal Teluk Lamong (TTL) Complex';
-  }
-
-  _getDestinationName(pos, state, mission) {
-    if (pos.z < -170) return 'Mainland Security Checkpoint & Bridge 1';
-    if (state === TruckState.ARRIVING || state === TruckState.GATE_INSPECTION) return 'Small Island In-Gate 01 & Weighbridge';
-    if (state === TruckState.TRANSIT_TO_CY) return mission === 'UNLOAD' ? 'Zone C: CY Storage (Drop-off)' : 'Zone C: CY Storage (Pickup)';
-    if (state === TruckState.CY_TRANSFER) return 'Reach Stacker Crane Operation';
-    if (pos.z >= 120 && pos.z < 250) return 'Zone D: Offshore Deep-Sea Quay';
-    if (pos.z >= 250) return 'Trestle Return & Out-Gate 02';
-    return 'Small Island Out-Gate 02 & Mainland Return';
-  }
-
-  _updateTimeline(state, pos) {
-    if (!this.timelineNodes || this.timelineNodes.length < 6) return;
-
-    let activeIndex = 0;
-    if (pos.z < -170) activeIndex = 0;
-    else if ((pos.z >= -170 && pos.z < -30) && (state === TruckState.ARRIVING || state === TruckState.GATE_INSPECTION)) activeIndex = 1;
-    else if (state === TruckState.GATE_CLEARANCE || state === TruckState.TRANSIT_TO_CY || state === TruckState.CY_TRANSFER) activeIndex = 2;
-    else if (pos.z >= 120 && pos.z < 250) activeIndex = 3;
-    else if (pos.z >= 250) activeIndex = 4;
-    else activeIndex = 5;
-
-    this.timelineNodes.forEach((node, index) => {
-      node.classList.remove('step-completed', 'step-active', 'step-pending');
-      if (index < activeIndex) node.classList.add('step-completed');
-      else if (index === activeIndex) node.classList.add('step-active');
-      else node.classList.add('step-pending');
+  _initEvents() {
+    this.btnPrev?.addEventListener('click', () => {
+      if (typeof this.onStepRequest === 'function') this.onStepRequest(-1);
+    });
+    this.btnNext?.addEventListener('click', () => {
+      if (typeof this.onStepRequest === 'function') this.onStepRequest(1);
+    });
+    this.btnFocus?.addEventListener('click', () => {
+      if (this.currentSector && typeof this.onFocusRequest === 'function') {
+        this.onFocusRequest(this.currentSector);
+      }
+    });
+    this.btnClose?.addEventListener('click', () => {
+      if (typeof this.onCloseRequest === 'function') {
+        this.onCloseRequest();
+      }
     });
   }
 
-  _updateLocationIntel(cameraManager, inGate, outGate, fleetTrucks) {
-    const activeStation = cameraManager.getActiveStationKey();
+  render(sector) {
+    this.currentSector = sector;
+    if (!this.panelEl) return;
 
-    if (activeStation === 'GATE') {
-      if (this.locName) this.locName.textContent = 'ZONE B: SMALL ADMINISTRATIVE & GATE ISLAND';
-      if (this.locType) this.locType.textContent = 'Gate Plaza, Head Office HQ & Truck Waiting Area';
-      if (this.locOperation) this.locOperation.textContent = `In-Gate: ${inGate ? inGate.state : 'ONLINE'} | Out-Gate: ${outGate ? outGate.state : 'ONLINE'}`;
-      if (this.locEquipment) this.locEquipment.textContent = 'In/Out Portals, Weighbridge Scale, Barrier Arms, Shelter';
-      if (this.locActiveTruck) this.locActiveTruck.textContent = 'Layout Inspection Mode (Truck Spawning Paused)';
-      if (this.locNextEvent) this.locNextEvent.textContent = 'Gate & HQ Infrastructure Inspection';
-    } else if (activeStation === 'CY') {
-      if (this.locName) this.locName.textContent = 'ZONE C: LARGE CONTAINER YARD (CY) ISLAND';
-      if (this.locType) this.locType.textContent = 'Industrial Stacking Blocks, CFS Warehouse & ASC Rails';
-      if (this.locOperation) this.locOperation.textContent = 'Reach Stacker Container Stacking & Dispatch';
-      if (this.locEquipment) this.locEquipment.textContent = 'Reach Stacker RS-01, 3x ASC Overhead Gantries, 6 Yard Blocks';
-      if (this.locActiveTruck) this.locActiveTruck.textContent = 'Layout Inspection Mode (Truck Spawning Paused)';
-      if (this.locNextEvent) this.locNextEvent.textContent = 'CY Stacking Blocks & Roadway Development';
-    } else if (activeStation === 'TRESTLE') {
-      if (this.locName) this.locName.textContent = 'CONNECTION 3: LONG OFFSHORE TRESTLE';
-      if (this.locType) this.locType.textContent = 'Elevated Deep-Water Marine Causeway (130m)';
-      if (this.locOperation) this.locOperation.textContent = 'Inter-facility Transit across Teluk Lamong Deep Water';
-      if (this.locEquipment) this.locEquipment.textContent = 'Concrete Parapets, Deep Marine Pilings, Streetlights';
-      if (this.locActiveTruck) this.locActiveTruck.textContent = 'Clear Marine Causeway';
-      if (this.locNextEvent) this.locNextEvent.textContent = 'Deep-Sea Pier Connection';
-    } else if (activeStation === 'BERTH') {
-      if (this.locName) this.locName.textContent = 'ZONE D: OFFSHORE DEEP-SEA QUAY (DERMAGA)';
-      if (this.locType) this.locType.textContent = 'Deep-Water Pier Platform (150m x 26m)';
-      if (this.locOperation) this.locOperation.textContent = 'Ship-to-Shore Container Handling';
-      if (this.locEquipment) this.locEquipment.textContent = '2x STS Super Post-Panamax Cranes, Moored Cargo Vessel';
-      if (this.locActiveTruck) this.locActiveTruck.textContent = 'Berth Facility Standby';
-      if (this.locNextEvent) this.locNextEvent.textContent = 'Quay Crane & Pier Infrastructure Development';
-    } else {
-      // OVERVIEW
-      if (this.locName) this.locName.textContent = 'TERMINAL TELUK LAMONG (TTL) SURABAYA';
-      if (this.locType) this.locType.textContent = '4-Zone Geographic Topology Simulation';
-      if (this.locOperation) this.locOperation.textContent = 'Mainland ➔ Bridge 1 ➔ Small Island ➔ Bridge 2 ➔ Large Island ➔ Trestle ➔ Quay';
-      if (this.locEquipment) this.locEquipment.textContent = 'Mainland Post, Gate Plaza, Head Office, CY Blocks, Reach Stacker, Trestle, STS Cranes';
-      if (this.locActiveTruck) this.locActiveTruck.textContent = 'Layout Development Phase (Trucks Paused)';
-      if (this.locNextEvent) this.locNextEvent.textContent = 'World Map & Facility Layout Refinement';
+    if (!sector) {
+      this.panelEl.classList.add('is-hidden');
+      return;
     }
+
+    this.panelEl.classList.remove('is-hidden');
+    this.panelEl.style.setProperty('--sector-accent', sector.accentColor);
+
+    if (this.dotEl) this.dotEl.style.backgroundColor = sector.accentColor;
+    if (this.nameEl) this.nameEl.textContent = sector.fullName;
+    if (this.statusEl) this.statusEl.textContent = sector.statusLabel;
+    if (this.codeEl) this.codeEl.textContent = `${sector.code}/05`;
+
+    const data = this.dataStore?.getSectorData(sector.id);
+    if (!data) return;
+
+    this.activeContainer?.replaceChildren();
+    this.doneContainer?.replaceChildren();
+    this.readinessContainer?.replaceChildren();
+
+    switch (sector.id) {
+      case 'PRE_GATE':
+        this._renderPreGate(data);
+        break;
+      case 'WAITING_CY':
+        this._renderWaitingCy(data);
+        break;
+      case 'MAIN_GATE':
+        this._renderMainGate(data);
+        break;
+      case 'CONTAINER_YARD':
+        this._renderContainerYard(data);
+        break;
+      case 'DERMAGA':
+        this._renderDermaga(data);
+        break;
+    }
+  }
+
+  _renderPreGate(d) {
+    this.activeContainer?.appendChild(
+      createMetricRow('Sedang Cek TBS & WIM', `${d.activeChecking} truk`)
+    );
+    const note = document.createElement('div');
+    note.className = 'sector-inline-note';
+    note.textContent = d.lastEvent;
+    this.activeContainer?.appendChild(note);
+
+    this.doneContainer?.appendChild(
+      createMetricRow('Lolos ke Main Gate', `${d.passedToMainGate} truk`, true)
+    );
+    this.doneContainer?.appendChild(
+      createMetricRow('Dialihkan ke Waiting', `${d.divertedToWaiting} truk`)
+    );
+
+    const grid = document.createElement('div');
+    grid.className = 'readiness-grid';
+    grid.appendChild(createReadinessChip('Portal WIM', d.portalsReady, d.portalsTotal, ' Lajur'));
+    this.readinessContainer?.appendChild(grid);
+
+    const portalHint = document.createElement('div');
+    portalHint.className = 'sector-inline-note';
+    portalHint.textContent = 'Data hanya dari 3 jalur berportal (jalur umum tanpa portal tidak terdata).';
+    this.readinessContainer?.appendChild(portalHint);
+  }
+
+  _renderWaitingCy(d) {
+    this.activeContainer?.appendChild(
+      createMetricRow('Truk Tunggu Resolusi', `${d.waitingTrucks} / ${d.slotCapacity} slot`, true)
+    );
+    this.activeContainer?.appendChild(
+      createMetricRow('Aktivitas Buffer', 'TR 2 · TR 4 · TR 5')
+    );
+
+    this.doneContainer?.appendChild(
+      createMetricRow('Solved & Keluar ke CY', `${d.resolvedExited} truk`, true)
+    );
+    this.doneContainer?.appendChild(
+      createMetricRow('Kontainer Buffer', `${d.bufferContainersHandled} box`)
+    );
+
+    const grid = document.createElement('div');
+    grid.className = 'readiness-grid';
+    grid.appendChild(createReadinessChip('Slot Tunggu', d.waitingTrucks, d.slotCapacity));
+    grid.appendChild(createReadinessChip('RS Ready', d.equipment.rsReady, EQUIPMENT_LIMITS.RS));
+    grid.appendChild(createReadinessChip('EH Ready', d.equipment.ehReady, EQUIPMENT_LIMITS.EH));
+    this.readinessContainer?.appendChild(grid);
+  }
+
+  _renderMainGate(d) {
+    this.activeContainer?.appendChild(
+      createMetricRow('Sedang Proses Gate', `In: ${d.activeInGate} · Out: ${d.activeOutGate}`)
+    );
+
+    // Sub-kartu khusus Data Truk Terakhir Lewat Main Gate
+    const lastBox = document.createElement('div');
+    lastBox.className = 'last-truck-box';
+
+    const lastTitle = document.createElement('div');
+    lastTitle.className = 'last-truck-title';
+    lastTitle.textContent = 'TRUK TERAKHIR MELINTAS';
+    lastBox.appendChild(lastTitle);
+
+    if (d.lastTruck) {
+      const t = d.lastTruck;
+      lastBox.appendChild(
+        createMetricRow(`${t.direction === 'IN' ? 'Gate-In' : 'Gate-Out'} (${t.lane})`, t.truckId, true)
+      );
+      lastBox.appendChild(createMetricRow('Kontainer', t.containerNo));
+      lastBox.appendChild(createMetricRow('Job / Blok CY', `${t.jobOrder} · ${t.block}`));
+      lastBox.appendChild(createMetricRow('Waktu', t.timeStr));
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'sector-inline-note';
+      empty.textContent = 'Belum ada transaksi truk (menunggu simulasi aktif).';
+      lastBox.appendChild(empty);
+    }
+    this.activeContainer?.appendChild(lastBox);
+
+    this.doneContainer?.appendChild(
+      createMetricRow('Total Gate-In Selesai', `${d.completedIn} truk`, true)
+    );
+    this.doneContainer?.appendChild(
+      createMetricRow('Total Gate-Out Selesai', `${d.completedOut} truk`)
+    );
+    this.doneContainer?.appendChild(
+      createMetricRow('Rata-rata Dwell', `${d.avgDwellSec} dtk`)
+    );
+
+    const grid = document.createElement('div');
+    grid.className = 'readiness-grid';
+    grid.appendChild(createReadinessChip('In Aktif', d.activeInGate, 4, ' Lajur'));
+    grid.appendChild(createReadinessChip('Out Aktif', d.activeOutGate, 4, ' Lajur'));
+    this.readinessContainer?.appendChild(grid);
+  }
+
+  _renderContainerYard(d) {
+    this.activeContainer?.appendChild(
+      createMetricRow('Job Truk Eksternal (R/D)', `${d.activeExternalJobs} aktif`)
+    );
+    this.activeContainer?.appendChild(
+      createMetricRow('Job Truk Internal (Dermaga)', `${d.activeInternalJobs} aktif`)
+    );
+
+    this.doneContainer?.appendChild(
+      createMetricRow('Total Box Ditangani', `${d.completedBoxes} box`, true)
+    );
+    this.doneContainer?.appendChild(
+      createMetricRow('Okupansi Yard (YOR)', `${d.yorPercent.toFixed(1)}%`)
+    );
+
+    const grid = document.createElement('div');
+    grid.className = 'readiness-grid';
+    grid.appendChild(createReadinessChip('ASC', d.equipment.ascReady, EQUIPMENT_LIMITS.ASC));
+    grid.appendChild(createReadinessChip('RTG', d.equipment.rtgReady, EQUIPMENT_LIMITS.RTG));
+    grid.appendChild(createReadinessChip('RS', d.equipment.rsReady, EQUIPMENT_LIMITS.RS));
+    grid.appendChild(createReadinessChip('EH', d.equipment.ehReady, EQUIPMENT_LIMITS.EH));
+    this.readinessContainer?.appendChild(grid);
+  }
+
+  _renderDermaga(d) {
+    if (d.vessels.length > 0) {
+      d.vessels.forEach((v) => {
+        const card = document.createElement('div');
+        card.className = 'vessel-card';
+
+        const top = document.createElement('div');
+        top.className = 'vessel-card-top';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'vessel-name';
+        nameEl.textContent = `${v.name} (${v.berthSide})`;
+
+        const stsEl = document.createElement('span');
+        stsEl.className = 'vessel-sts-badge';
+        stsEl.textContent = `${v.allocatedSts} STS`;
+
+        top.appendChild(nameEl);
+        top.appendChild(stsEl);
+        card.appendChild(top);
+
+        card.appendChild(createProgressLine('Discharge', v.dischargeDone, v.dischargeTotal, 'is-discharge'));
+        card.appendChild(createProgressLine('Load', v.loadDone, v.loadTotal, 'is-load'));
+        this.activeContainer?.appendChild(card);
+      });
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'sector-inline-note';
+      empty.textContent = '0 kapal sandar — Alokasi CC/STS & progress Load/Discharge per kapal tampil saat simulasi berjalan.';
+      this.activeContainer?.appendChild(empty);
+    }
+
+    this.doneContainer?.appendChild(
+      createMetricRow('Total Discharge', `${d.totalDischarged} box`, true)
+    );
+    this.doneContainer?.appendChild(
+      createMetricRow('Total Load', `${d.totalLoaded} box`, true)
+    );
+
+    const grid = document.createElement('div');
+    grid.className = 'readiness-grid';
+    grid.appendChild(createReadinessChip('BOR Total', d.borPercent.toFixed(0), null, '%'));
+    grid.appendChild(createReadinessChip('STS Alokasi', d.stsAllocated, d.stsMax));
+    grid.appendChild(createReadinessChip('STS Ready', d.stsReady, d.stsMax));
+    this.readinessContainer?.appendChild(grid);
+
+    const borBreakdown = document.createElement('div');
+    borBreakdown.className = 'sector-inline-note';
+    borBreakdown.textContent = `BOR Int: ${d.borIntPercent.toFixed(0)}% · BOR Dom: ${d.borDomPercent.toFixed(0)}% · Pier ${d.pierLengthM}m`;
+    this.readinessContainer?.appendChild(borBreakdown);
   }
 }

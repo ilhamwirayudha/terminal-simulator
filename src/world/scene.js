@@ -12,15 +12,15 @@ export function createScene(canvas) {
   scene.background = new THREE.Color(0xb9daf8);
   scene.fog = null;
 
-  // 2. Perspective Camera (Posisi di atas aspal jalan lajur masuk: Z = -320)
+  // 2. Perspective Camera (Terminal Drone Overview)
   const camera = new THREE.PerspectiveCamera(
     45,
     window.innerWidth / window.innerHeight,
     0.05, // 5cm near plane: prevents surface clipping
     6500
   );
-  camera.position.set(13.8, 3.2, -320);
-  camera.lookAt(13.8, 2.0, -180);
+  camera.position.set(-210, 440, 320);
+  camera.lookAt(-50, 10, 1750);
 
   // 3. WebGL Renderer
   const renderer = new THREE.WebGLRenderer({
@@ -44,7 +44,7 @@ export function createScene(canvas) {
   controls.enablePan = false;    // Disabled: WASD handles 3D translation
   controls.enableZoom = false;   // Disabled: CameraManager handles FOV zoom
   controls.enableDamping = false;
-  controls.target.set(13.8, 2.0, -180);
+  controls.target.set(-50, 10, 1750);
 
   // 5. Responsive Resize Handling
   window.addEventListener('resize', () => {

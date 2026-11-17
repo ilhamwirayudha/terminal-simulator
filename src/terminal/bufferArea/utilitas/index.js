@@ -58,12 +58,12 @@ export function createUtilitasArea(scene = null) {
   const ptNE = uvToWorld(1.00, 1.00);
   groundShape.lineTo(ptNE.x, -ptNE.z);
 
-  // Sisi kanstin tepi jalan dari Z=775 mundur ke abutmen Z=625 mengikuti transisi jalan
-  for (let u = 1.00; u >= 0.12; u -= 0.04) {
+  // Sisi kanstin tepi jalan dari Z=775 mundur ke abutmen Z=570 mengikuti transisi jalan
+  for (let u = 1.00; u >= 0.00; u -= 0.04) {
     const pt = uvToWorld(u, 1.00);
     groundShape.lineTo(pt.x, -pt.z);
   }
-  const ptSE = uvToWorld(0.12, 1.00);
+  const ptSE = uvToWorld(0.00, 1.00);
   groundShape.lineTo(ptSE.x, -ptSE.z);
   groundShape.lineTo(coastlineWorldPts[0].x, -coastlineWorldPts[0].z);
   groundShape.closePath();

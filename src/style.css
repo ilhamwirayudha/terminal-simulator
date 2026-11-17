@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Terminal Operation Simulator - Base Styles (Collapsible Panels)
+   Terminal Teluk Lamong 3D Simulator - Clean Maritime Control HUD
    ========================================================================== */
 
 * {
@@ -8,7 +8,8 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -18,787 +19,732 @@ html, body {
   user-select: none;
 }
 
-/* 3D WebGL Canvas */
 #webgl-canvas {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
   height: 100vh;
   display: block;
   outline: none;
   z-index: 1;
+  cursor: grab;
 }
 
-/* UI Overlay Container */
+#webgl-canvas:active {
+  cursor: grabbing;
+}
+
 #ui-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* Mouse interactions pass through to 3D canvas */
+  inset: 0;
+  pointer-events: none;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
 }
 
-/* Top Bar Container (Temporarily Hidden - All Info Panels) */
-.top-bar {
-  display: none !important;
-}
-
-/* Bottom Bar Container */
-.bottom-bar {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-end;
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-}
-
-/* Generic HUD Panel & Collapse Mechanism */
 .hud-panel {
   pointer-events: auto;
-  background: rgba(26, 32, 44, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              background 0.3s ease;
+  background: rgba(15, 23, 42, 0.84);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.38);
+}
+
+.is-hidden {
+  display: none !important;
 }
 
 .panel-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .panel-card-title {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.75px;
   color: #94a3b8;
   text-transform: uppercase;
 }
 
 .btn-panel-toggle {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   color: #cbd5e1;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-  display: flex;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, color 0.15s ease;
   flex-shrink: 0;
 }
 
 .btn-panel-toggle:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(56, 189, 248, 0.22);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: scale(1.06);
+  border-color: rgba(56, 189, 248, 0.5);
 }
 
 .panel-body {
-  transition: max-height 0.35s ease, opacity 0.25s ease, margin-top 0.25s ease;
   overflow: hidden;
+  transition: opacity 0.2s ease;
 }
 
 .hud-panel.is-collapsed .panel-body {
-  max-height: 0 !important;
-  opacity: 0 !important;
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  pointer-events: none;
-}
-
-/* 1. Header / Title Panel */
-.header-card {
-  padding: 12px 16px;
-  min-width: 280px;
-  max-width: 360px;
-}
-
-.header-card.is-collapsed {
-  min-width: auto;
-  width: auto;
-  padding: 8px 14px;
-}
-
-.header-titles h1 {
-  font-size: 15px;
-  font-weight: 700;
-  color: #f8fafc;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.header-card .badge {
-  display: inline-block;
-  font-size: 9.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-
-.header-subtext {
-  font-size: 11px;
-  color: #94a3b8;
-  margin-top: 8px;
-  line-height: 1.4;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 6px;
-}
-
-/* 2. Top Right Operational Intelligence Dashboard (Temporarily Hidden) */
-.dashboard-card {
-  display: none !important;
-  padding: 12px 16px;
-  width: 320px;
-  max-height: 84vh;
-}
-
-.dashboard-card.is-collapsed {
-  width: auto;
-  min-width: 170px;
-  padding: 8px 14px;
-}
-
-.dashboard-header-bar {
-  margin-bottom: 8px;
-}
-
-.dashboard-card.is-collapsed .dashboard-header-bar {
-  margin-bottom: 0;
-}
-
-.dashboard-tabs {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 6px;
-}
-
-.tab-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  padding: 5px 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.tab-btn:hover {
-  color: #f1f5f9;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.tab-btn.active {
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-/* Fleet Selector Chips */
-.fleet-chips {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.chip-truck {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #94a3b8;
-  padding: 5px 6px;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.chip-truck:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #f1f5f9;
-}
-
-.chip-truck.active {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: rgba(56, 189, 248, 0.5);
-  color: #38bdf8;
-}
-
-.intel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.intel-id {
-  font-weight: 700;
-  font-size: 13px;
-  color: #f1f5f9;
-  letter-spacing: 0.5px;
-}
-
-.state-badge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  padding: 3px 7px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-.badge-arriving {
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.5);
-}
-
-.badge-inspection {
-  background: rgba(250, 204, 21, 0.2);
-  color: #facc15;
-  border: 1px solid rgba(250, 204, 21, 0.5);
-}
-
-.badge-clearance {
-  background: rgba(74, 222, 128, 0.2);
-  color: #4ade80;
-  border: 1px solid rgba(74, 222, 128, 0.5);
-}
-
-.badge-moving {
-  background: rgba(96, 165, 250, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(96, 165, 250, 0.5);
-}
-
-.badge-completed {
-  background: rgba(192, 132, 252, 0.2);
-  color: #c084fc;
-  border: 1px solid rgba(192, 132, 252, 0.5);
-}
-
-.intel-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 11.5px;
-  margin-bottom: 10px;
-}
-
-.intel-row {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-}
-
-.intel-row .label {
-  color: #94a3b8;
-  font-weight: 600;
-  min-width: 68px;
-}
-
-.intel-row .value {
-  color: #e2e8f0;
-  font-weight: 500;
-  word-break: break-word;
-}
-
-/* Operation Timeline */
-.timeline-container {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.timeline-title {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  color: #94a3b8;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.timeline-track {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-left: 4px;
-}
-
-.timeline-track::before {
-  content: '';
-  position: absolute;
-  top: 6px;
-  bottom: 6px;
-  left: 8px;
-  width: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: 1;
-}
-
-.timeline-step {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 2;
-  font-size: 11px;
-}
-
-.step-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #334155;
-  border: 2px solid #64748b;
-  flex-shrink: 0;
-  transition: all 0.3s ease;
-}
-
-.step-label {
-  color: #64748b;
-  transition: color 0.3s ease;
-}
-
-.timeline-step.step-completed .step-dot {
-  background: #3b82f6;
-  border-color: #60a5fa;
-}
-
-.timeline-step.step-completed .step-label {
-  color: #cbd5e1;
-}
-
-.timeline-step.step-active .step-dot {
-  background: #22c55e;
-  border-color: #4ade80;
-  box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
-}
-
-.timeline-step.step-active .step-label {
-  color: #4ade80;
-  font-weight: 700;
-}
-
-.timeline-step.step-pending .step-dot {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-.timeline-step.step-pending .step-label {
-  color: #64748b;
-}
-
-/* 3. Bottom Left Controls Hint Panel */
-.controls-hint {
-  padding: 10px 14px;
-  min-width: 220px;
-  font-size: 12px;
-  color: #cbd5e1;
-}
-
-.controls-hint.is-collapsed {
-  min-width: auto;
-  width: auto;
-  padding: 8px 14px;
-}
-
-.controls-hint ul {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 6px;
-}
-
-.controls-hint li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.controls-hint li span {
-  color: #94a3b8;
-}
-
-/* 4. Bottom Right Camera Stations Panel (Removed as requested) */
-.camera-card {
-  display: none !important;
-}
-
-.camera-card.is-collapsed {
-  min-width: auto;
-  width: auto;
-  padding: 8px 14px;
-}
-
-.camera-header-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.camera-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  color: #94a3b8;
-  text-transform: uppercase;
-}
-
-.camera-badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  padding: 2px 7px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-.badge-overview {
-  background: rgba(148, 163, 184, 0.15);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-.badge-standing {
-  background: rgba(245, 158, 11, 0.22);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.55);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-  cursor: pointer;
-}
-
-.badge-following {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.5);
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
-}
-
-.station-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-
-.camera-mode-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(2, 132, 199, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 7px 10px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-.camera-mode-tag {
-  color: #38bdf8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-}
-
-.camera-actions {
-  display: flex;
-  margin-top: 4px;
-  gap: 8px;
-}
-
-.btn-reset-camera {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.35), rgba(30, 58, 138, 0.45));
-  border: 1px solid rgba(56, 189, 248, 0.6);
-  color: #ffffff;
-  padding: 8px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.25);
-  transition: all 0.25s ease;
-}
-
-.btn-reset-camera:hover {
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.6), rgba(30, 58, 138, 0.7));
-  border-color: #38bdf8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
-}
-
-.btn-reset-camera:active {
-  transform: translateY(0);
-}
-
-.btn-camera {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.5);
-  color: #f1f5f9;
-  padding: 7px 12px;
-  font-size: 11.5px;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-camera:hover {
-  background: rgba(59, 130, 246, 0.35);
-  border-color: rgba(96, 165, 250, 0.8);
-  transform: translateY(-1px);
-}
-
-.btn-camera.active {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #fca5a5;
-}
-
-.btn-camera.active:hover {
-  background: rgba(239, 68, 68, 0.35);
-  border-color: rgba(248, 113, 113, 0.8);
-}
-
-.btn-icon {
-  font-size: 13px;
+  display: none;
 }
 
 /* ==========================================================================
-   GPS Telemetry & Teleport Panel (Top Right HUD)
+   0. Floating 3D Sector Markers Layer (Below HUD Panels)
+   ========================================================================== */
+.sector-markers-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.sector-3d-pin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(15, 23, 42, 0.84);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-left: 3px solid var(--sector-accent, #38bdf8);
+  border-radius: 6px;
+  color: #f8fafc;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 6, 23, 0.45);
+  transition: opacity 0.18s ease, border-color 0.15s ease, background 0.15s ease;
+  will-change: transform, opacity;
+}
+
+.sector-3d-pin:hover,
+.sector-3d-pin.is-active {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: var(--sector-accent, #38bdf8);
+}
+
+.pin-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pin-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.pin-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.pin-stat {
+  margin-top: 1px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 9px;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.pin-stem {
+  position: absolute;
+  bottom: -7px;
+  width: 2px;
+  height: 7px;
+  background: var(--sector-accent, #38bdf8);
+  opacity: 0.75;
+}
+
+/* ==========================================================================
+   1. Top-Left Stack (Nav Bar + Activity Panel, Anti-Overlap Flex Column)
+   ========================================================================== */
+.top-left-stack {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  max-width: calc(100vw - 278px);
+  max-height: calc(100vh - 176px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.top-nav-bar {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 9px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.brand-chip {
+  display: flex;
+  align-items: center;
+  padding-right: 2px;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+.sector-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.sector-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+}
+
+.sector-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(51, 65, 85, 0.8);
+  border-color: var(--sector-accent, #38bdf8);
+}
+
+.sector-tab-btn.active {
+  color: #ffffff;
+  background: rgba(30, 41, 59, 0.95);
+  border-color: var(--sector-accent, #38bdf8);
+  box-shadow: 0 0 0 1px var(--sector-accent, #38bdf8) inset;
+}
+
+.sector-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.clock-bar-group,
+.camera-bar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.segmented-switch {
+  display: inline-flex;
+  padding: 2px;
+  background: rgba(2, 6, 23, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 5px;
+}
+
+.seg-btn {
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.seg-btn:hover {
+  color: #e2e8f0;
+}
+
+.seg-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.clock-readout {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  background: rgba(2, 6, 23, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 5px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+}
+
+.status-dot.is-live {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.status-dot.is-paused {
+  background: #f59e0b;
+}
+
+.clock-time {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.clock-shift {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #38bdf8;
+  padding-left: 4px;
+  border-left: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.sim-clock-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.speed-group {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.btn-mini-icon,
+.btn-sim-speed,
+.btn-mini-text {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: #cbd5e1;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.btn-mini-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-sim-speed {
+  padding: 2px 5px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.btn-sim-speed.active,
+.btn-mini-text.active {
+  background: rgba(56, 189, 248, 0.24);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.btn-mini-text {
+  padding: 3px 7px;
+}
+
+.btn-mini-icon:hover,
+.btn-sim-speed:hover,
+.btn-mini-text:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   2. Sector Activity-by-Data Panel (Flowing cleanly below Top Nav Bar)
+   ========================================================================== */
+.sector-activity-panel {
+  position: relative;
+  width: 326px;
+  max-width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border-left: 3px solid var(--sector-accent, #38bdf8);
+}
+
+.sector-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.sector-title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.sector-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sector-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.28;
+  color: #f8fafc;
+}
+
+.sector-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.sector-subbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sector-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.sector-code-badge {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.sector-data-section {
+  padding-top: 7px;
+  margin-top: 7px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.sector-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+
+.sector-data-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sector-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 10.5px;
+}
+
+.metric-label {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.metric-value {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  color: #e2e8f0;
+  font-weight: 600;
+  text-align: right;
+  font-size: 10px;
+}
+
+.metric-value.is-highlight {
+  color: #38bdf8;
+}
+
+.sector-inline-note {
+  font-size: 9.5px;
+  line-height: 1.38;
+  color: #94a3b8;
+}
+
+.readiness-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.readiness-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  background: rgba(2, 6, 23, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
+  font-size: 9.5px;
+}
+
+.chip-lbl {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.chip-val {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  color: #34d399;
+  font-weight: 700;
+}
+
+/* Main Gate Last Truck Sub-Card */
+.last-truck-box {
+  margin-top: 3px;
+  padding: 6px 8px;
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.last-truck-title {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #fbbf24;
+  margin-bottom: 1px;
+}
+
+/* Dermaga Per-Vessel Cards */
+.vessel-card {
+  padding: 6px 8px;
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vessel-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.vessel-name {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.vessel-sts-badge {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.vessel-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vessel-progress-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: #cbd5e1;
+}
+
+.mono-val {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(148, 163, 184, 0.16);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #38bdf8;
+  transition: width 0.2s ease;
+}
+
+.progress-fill.is-discharge {
+  background: #38bdf8;
+}
+
+.progress-fill.is-load {
+  background: #34d399;
+}
+
+/* ==========================================================================
+   3. Top Right Compact Compass & Telemetry Panel
    ========================================================================== */
 .gps-teleport-panel {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 320px;
+  top: 14px;
+  right: 14px;
+  width: 248px;
+  padding: 10px 12px;
   z-index: 25;
-  padding: 14px 16px;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  background: rgba(15, 23, 42, 0.88);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
 }
 
 .gps-teleport-panel.is-collapsed {
   width: auto;
-  min-width: 210px;
-  padding: 10px 14px;
+  min-width: 175px;
+  padding: 7px 10px;
 }
 
 .gps-header-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pulse-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  animation: pulseGlow 1.8s infinite ease-in-out;
+  box-shadow: 0 0 6px #10b981;
 }
 
-/* ==========================================================================
-   Compass / Arah Mata Angin (Apple Maps & WGS84 Calibrated)
-   ========================================================================== */
 .compass-widget-box {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.6) 100%);
-  padding: 10px 12px;
-  border-radius: 10px;
+  gap: 10px;
+  background: rgba(2, 6, 23, 0.5);
+  padding: 7px 9px;
+  border-radius: 7px;
   border: 1px solid rgba(56, 189, 248, 0.22);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 4px 14px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .compass-widget-box:hover {
-  border-color: rgba(56, 189, 248, 0.45);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(30, 41, 59, 0.75) 100%);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(2, 6, 23, 0.72);
 }
 
 .compass-dial-container {
   flex-shrink: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.compass-svg {
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
 }
 
 .compass-info {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .compass-heading-row {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 5px;
 }
 
 .compass-deg {
   font-family: 'JetBrains Mono', Consolas, monospace;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
   color: #38bdf8;
-  letter-spacing: -0.5px;
 }
 
 .compass-cardinal {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #e2e8f0;
-  letter-spacing: 0.3px;
-}
-
-.compass-badge {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  width: fit-content;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  background: rgba(100, 116, 139, 0.2);
-  color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  transition: all 0.2s ease;
-}
-
-.compass-badge.badge-north {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-.compass-badge.badge-road {
-  background: rgba(14, 165, 233, 0.2);
-  color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.4);
-}
-
-.compass-badge.badge-cardinal {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.4);
-}
-
-.compass-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  margin-top: 3px;
-}
-
-.btn-compass-action {
-  padding: 3px 2px;
-  font-size: 9px;
-  font-weight: 600;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: #cbd5e1;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s ease;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.btn-compass-action:hover {
-  background: rgba(56, 189, 248, 0.22);
-  color: #ffffff;
-  border-color: rgba(56, 189, 248, 0.5);
-  transform: translateY(-1px);
-}
-
-.btn-road-highlight {
-  grid-column: span 4;
-  background: rgba(14, 165, 233, 0.14);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
-  font-weight: 700;
-  padding: 4px 6px;
-}
-
-.btn-road-highlight:hover {
-  background: rgba(14, 165, 233, 0.3);
-  color: #ffffff;
+.compass-hint {
+  font-size: 9px;
+  color: #64748b;
 }
 
 .gps-display-box {
-  margin-top: 10px;
+  margin-top: 7px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  background: rgba(2, 6, 23, 0.6);
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 6px;
+  background: rgba(2, 6, 23, 0.5);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .gps-field-group {
@@ -807,32 +753,32 @@ html, body {
 }
 
 .gps-field-label {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
   color: #64748b;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .gps-field-value {
   font-family: 'JetBrains Mono', Consolas, monospace;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: #38bdf8;
-  margin-top: 2px;
 }
 
 .gps-telemetry-meta {
-  margin-top: 8px;
+  margin-top: 7px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .meta-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
 }
 
 .meta-label {
@@ -842,99 +788,76 @@ html, body {
 .meta-value {
   font-family: 'JetBrains Mono', Consolas, monospace;
   color: #cbd5e1;
-  font-size: 10.5px;
+  font-size: 9.5px;
 }
 
 .meta-zone-badge {
-  background: rgba(2, 132, 199, 0.2);
+  background: rgba(2, 132, 199, 0.16);
   color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  padding: 2px 8px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 1px 6px;
   border-radius: 4px;
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 600;
 }
 
-.gps-actions-row {
+.teleport-compact-row {
   margin-top: 8px;
-}
-
-.btn-gps-copy {
-  width: 100%;
-  padding: 6px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-gps-copy:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.gps-teleport-section {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.teleport-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 700;
-  color: #94a3b8;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-}
-
-.teleport-input-row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
-.teleport-input-row input {
+.teleport-compact-row input {
   flex: 1;
-  padding: 6px 8px;
-  font-size: 11px;
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 10px;
   font-family: 'JetBrains Mono', Consolas, monospace;
-  background: rgba(2, 6, 23, 0.7);
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  border-radius: 6px;
+  background: rgba(2, 6, 23, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 4px;
   color: #f8fafc;
   outline: none;
 }
 
-.teleport-input-row input:focus {
+.teleport-compact-row input:focus {
   border-color: #38bdf8;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
 }
 
-.teleport-input-row button {
-  padding: 6px 14px;
-  font-size: 11.5px;
+.btn-go {
+  padding: 4px 8px;
+  font-size: 10px;
   font-weight: 700;
   background: #0284c7;
   color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background 0.2s ease;
 }
 
-.teleport-input-row button:hover {
+.btn-go:hover {
   background: #0369a1;
 }
 
+.btn-copy-mini {
+  padding: 4px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-copy-mini:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
 .teleport-feedback {
-  font-size: 10.5px;
-  margin-top: 4px;
-  min-height: 14px;
+  font-size: 9.5px;
+  margin-top: 3px;
+  min-height: 12px;
   color: #94a3b8;
 }
 
@@ -946,3 +869,118 @@ html, body {
   color: #f87171;
 }
 
+/* ==========================================================================
+   4. Bottom Left Compact 2D Mini-Map (OPS / FULL Toggle + Tooltip)
+   ========================================================================== */
+.minimap-panel {
+  position: fixed;
+  bottom: 14px;
+  left: 14px;
+  width: 256px;
+  padding: 8px 10px;
+  z-index: 25;
+}
+
+.minimap-panel.is-collapsed {
+  width: auto;
+  min-width: 170px;
+  padding: 6px 10px;
+}
+
+.minimap-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.minimap-switch .seg-btn {
+  padding: 1px 5px;
+  font-size: 9px;
+}
+
+.minimap-canvas-wrap {
+  position: relative;
+  margin-top: 6px;
+}
+
+.minimap-canvas {
+  width: 236px;
+  height: 82px;
+  display: block;
+  border-radius: 5px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  cursor: crosshair;
+}
+
+.minimap-tooltip {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #f8fafc;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.minimap-axis-labels {
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+/* ==========================================================================
+   5. Bottom Right Ultra-Compact Controls Panel (Collapsed by Default)
+   ========================================================================== */
+.controls-panel {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  width: 260px;
+  padding: 8px 10px;
+  z-index: 25;
+}
+
+.controls-panel.is-collapsed {
+  width: auto;
+  padding: 6px 10px;
+}
+
+.controls-list {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.controls-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+}
+
+.controls-list kbd {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}

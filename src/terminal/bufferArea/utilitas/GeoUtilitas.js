@@ -1,26 +1,68 @@
 /**
  * ==============================================================================
  * Geodesic & Layout Utilitas Barat (GeoUtilitas.js)
- * Sesuai Citra Satelit Nyata: Orientasi, Proporsi, dan Tata Letak Sub-Area
+ * Terkalibrasi 1:1 Berdasarkan Koordinat GPS Ground Truth:
+ *
+ * 1. Keseluruhan Utilitas (205.0m x 161.7m | Z: 570.0 s/d 775.0, X: 13.3 s/d 175.0):
+ *    - PT1_NE_COAST: -7.202263, 112.667851 -> u = 1.000, v = 0.000 (Z = 775.0, X = 175.0)
+ *    - PT2_SE_ROAD:  -7.203327, 112.668962 -> u = 1.000, v = 1.000 (Z = 775.0, X = 13.3)
+ *    - PT3_SW_ROAD:  -7.204647, 112.667663 -> u = 0.000, v = 1.000 (Z = 570.0, X = 13.3)
+ *    - PT4_NW_BEND:  -7.202784, 112.667319 -> u = 0.592, v = 0.000 (Z = 691.4, X = 175.0)
+ *
+ * 2. SubAreaIpal (4 Titik GPS -> u: 0.433 s/d 0.696, v: 0.669 s/d 0.994):
+ *    -7.203719, 112.667861 | -7.203376, 112.668201 | -7.203738, 112.668576 | -7.204069, 112.668218
+ *
+ * 3. SubAreaParkirMotor (6 Titik GPS Poligon L-Shape -> u: 0.771 s/d 0.998, v: 0.336 s/d 0.713):
+ *    -7.202919, 112.667933 | -7.202618, 112.668226 | -7.203045, 112.668621 |
+ *    -7.203224, 112.668441 | -7.202949, 112.668153 | -7.203028, 112.668053
+ *
+ * 4. SubAreaShelter (8 Titik GPS Poligon Stepped L-Shape -> u: 0.814 s/d 0.992, v: 0.751 s/d 0.995):
+ *    -7.203229, 112.668521 | -7.203083, 112.668673 | -7.203239, 112.668851 | -7.203318, 112.668776 |
+ *    -7.203408, 112.668871 | -7.203569, 112.668729 | -7.203373, 112.668516 | -7.203291, 112.668573
  * ==============================================================================
- *
- * ORIENTASI SISTEM:
- * - ATAS   = Barat Laut (NW) -> Arah +X di Three.js (v = 0)
- * - BAWAH  = Tenggara (SE)   -> Arah -X di Three.js / Sisi Jalan Utama (v = 1)
- * - KIRI   = Barat Daya (SW) -> Arah -Z di Three.js / Abutmen Jembatan (u = 0)
- * - KANAN  = Timur Laut (NE) -> Arah +Z di Three.js / Gerbang Pre-Gate (u = 1)
- *
- * UTARA SEJATI: Kanan-Atas (+0.707, -0.707) dalam ruang (u, v)
  */
+
+export const UTILITAS_ANCHOR_GPS = {
+  OUTER_BOUNDS: [
+    [-7.202263, 112.667851], // Pt 1: Kanan-Atas (NE Coast)
+    [-7.203327, 112.668962], // Pt 2: Kanan-Bawah (SE Road)
+    [-7.204647, 112.667663], // Pt 3: Kiri-Bawah (SW Road)
+    [-7.202784, 112.667319]  // Pt 4: Kiri-Atas (NW Mangrove Bend)
+  ],
+  IPAL_BOUNDS: [
+    [-7.203719, 112.667861], // u: 0.434, v: 0.669
+    [-7.203376, 112.668201], // u: 0.695, v: 0.670
+    [-7.203738, 112.668576], // u: 0.696, v: 0.994
+    [-7.204069, 112.668218]  // u: 0.433, v: 0.994
+  ],
+  PARKIR_MOTOR_POLYGON: [
+    [-7.202919, 112.667933], // Pt 1: u: 0.771, v: 0.337
+    [-7.202618, 112.668226], // Pt 2: u: 0.998, v: 0.336
+    [-7.203045, 112.668621], // Pt 3: u: 0.981, v: 0.713
+    [-7.203224, 112.668441], // Pt 4: u: 0.844, v: 0.712
+    [-7.202949, 112.668153], // Pt 5: u: 0.842, v: 0.453
+    [-7.203028, 112.668053]  // Pt 6: u: 0.774, v: 0.442
+  ],
+  SHELTER_POLYGON: [
+    [-7.203229, 112.668521], // Pt 1: u: 0.872, v: 0.751
+    [-7.203083, 112.668673], // Pt 2: u: 0.986, v: 0.755
+    [-7.203239, 112.668851], // Pt 3: u: 0.992, v: 0.908
+    [-7.203318, 112.668776], // Pt 4: u: 0.933, v: 0.910
+    [-7.203408, 112.668871], // Pt 5: u: 0.934, v: 0.995
+    [-7.203569, 112.668729], // Pt 6: u: 0.819, v: 1.000
+    [-7.203373, 112.668516], // Pt 7: u: 0.814, v: 0.814
+    [-7.203291, 112.668573]  // Pt 8: u: 0.868, v: 0.803
+  ]
+};
 
 export const NORTH_VECTOR = [0.707, -0.707];
 export const EAST_VECTOR = [0.707, 0.707];
 
 export const SITE_CALIBRATION = {
-  uMinZ: 604.55,  // u = 0.0 (kiri / SW, tanjung mangrove barat daya)
-  uMaxZ: 775.0,   // u = 1.0 (kanan / NE, batas timur laut Area A tepat di Z = 775 sebelum pelebaran jalan)
-  vMinX: 175.0,   // v = 0.0 (atas / NW, garis pantai utara lurus menyambung CY di X = 175.0)
-  baseCurbX: 13.3, // v = 1.0 (bawah / SE, kanstin jalan utama sebelum pelebaran)
+  uMinZ: 570.0,    // u = 0.0 (Pt 3: -7.204647, 112.667663 -> Z = 570.0, digeser -55m dari 625.0)
+  uMaxZ: 775.0,    // u = 1.0 (Pt 2: -7.203327, 112.668962 -> Z = 775.0, Lebar Presisi = 205.0m)
+  vMinX: 175.0,    // v = 0.0 (Pt 1: -7.202263, 112.667851 -> X = 175.0, Tinggi = 161.7m)
+  baseCurbX: 13.3, // v = 1.0 (Kanstin jalan utama Pre-Gate)
   taperStartZ: 775.0,
   taperEndZ: 805.0,
   taperCurbX: 16.9
@@ -31,10 +73,9 @@ export const SITE_CALIBRATION = {
  */
 export function getRoadCurbX(z) {
   const { taperStartZ, taperEndZ, baseCurbX, taperCurbX } = SITE_CALIBRATION;
-  // Transisi awal dari jembatan (lebar 7.8 di Z=625) ke koridor 13.3 di Z=660
-  if (z <= 625.0) return 7.8;
-  if (z < 660.0) {
-    const t = (z - 625.0) / 35.0;
+  if (z <= 570.0) return 7.8;
+  if (z < 605.0) {
+    const t = (z - 570.0) / 35.0;
     const s = t * t * (3 - 2 * t);
     return 7.8 + 5.5 * s;
   }
@@ -46,9 +87,6 @@ export function getRoadCurbX(z) {
 
 /**
  * Mengonversi koordinat citra satelit (u, v) ke koordinat dunia 3D (x, z)
- * @param {number} u - 0 (kiri/SW) s/d 1 (kanan/NE)
- * @param {number} v - 0 (atas/NW) s/d 1 (bawah/SE jalan)
- * @returns {{x: number, z: number}}
  */
 export function uvToWorld(u, v) {
   const z = SITE_CALIBRATION.uMinZ + u * (SITE_CALIBRATION.uMaxZ - SITE_CALIBRATION.uMinZ);
@@ -59,9 +97,6 @@ export function uvToWorld(u, v) {
 
 /**
  * Mengonversi koordinat dunia Three.js (x, z) ke (u, v)
- * @param {number} x
- * @param {number} z
- * @returns {{u: number, v: number}}
  */
 export function worldToUv(x, z) {
   const u = (z - SITE_CALIBRATION.uMinZ) / (SITE_CALIBRATION.uMaxZ - SITE_CALIBRATION.uMinZ);
@@ -71,23 +106,19 @@ export function worldToUv(x, z) {
 }
 
 // ------------------------------------------------------------------------------
-// Garis Pantai Acuan Citra Satelit & Ground Truth Teluk Lamong
-// Di utara (u in [0.38, 1.00]): Garis pantai lurus di X = 175.0 (v = 0.00),
-// menyambung seamless dengan cyWaitingArea & cukerWaitingArea.
-// Di tanjung NW (u in [0.12, 0.38]): Melengkung mulus (smooth Catmull-Rom/Hermite spline)
-// menuju abutmen jembatan laut di Z = 625 (u = 0.12, v = 0.92, X ≈ 21.2).
+// Garis Pantai Terkalibrasi Presisi dari Pt 3 (u=0.00, v=0.92) -> Pt 4 (u=0.592, v=0.00) -> Pt 1 (u=1.00, v=0.00)
 // ------------------------------------------------------------------------------
 export const COASTLINE_CONTROL_POINTS = [
-  [0.12, 0.92], // Abutmen jembatan sisi laut (Z = 625.0, X ≈ 21.2)
-  [0.14, 0.72], // Transisi koridor jembatan (Z = 628.4, X ≈ 54.7)
-  [0.18, 0.42], // Pesisir barat daya (Z = 635.2, X ≈ 105.3)
-  [0.25, 0.14], // Bahu tanjung barat daya (Z = 647.2, X ≈ 152.1)
-  [0.32, 0.02], // Lengkungan tanjung barat laut (Z = 659.1, X ≈ 171.8)
-  [0.38, 0.00], // Awal garis pantai utara lurus (Z = 669.3, X = 175.0)
-  [1.00, 0.00]  // Perbatasan CY Waiting Area (Z = 775.0, X = 175.0)
+  [0.00, 0.92], // Pt 3 (-7.204647, 112.667663): Ujung barat daya di abutmen (Z = 570.0)
+  [0.06, 0.76], // Bahu bawah tanjung bakau barat daya
+  [0.18, 0.56], // Lereng diagonal bawah
+  [0.32, 0.35], // Lereng diagonal tengah
+  [0.46, 0.14], // Lereng diagonal atas
+  [0.55, 0.02], // Menjelang puncak belokan tanjung Pt 4
+  [0.592, 0.00],// Pt 4 (-7.202784, 112.667319): Sudut belokan pantai utara (Z = 691.4, X = 175.0)
+  [1.00, 0.00]  // Pt 1 (-7.202263, 112.667851): Pantai lurus utara 83.6m hingga Waiting CY (Z = 775.0)
 ];
 
-// Evaluator Spline Monotone Hermite untuk kontur pantai kontinu tanpa overshoot
 function createMonotoneSpline(pts) {
   const n = pts.length;
   const x = pts.map((p) => p[0]);
@@ -129,32 +160,23 @@ function createMonotoneSpline(pts) {
 
 const _coastlineSpline = createMonotoneSpline(COASTLINE_CONTROL_POINTS);
 
-/**
- * Mendapatkan nilai v garis pantai untuk nilai u tertentu (smooth spline)
- */
 export function getCoastlineV(u) {
   return _coastlineSpline(u);
 }
 
-// Sampling array titik diskret halus untuk kompatibilitas ShapeGeometry
 export const COASTLINE_UV = [];
-for (let i = 0; i <= 44; i++) {
-  const t = i / 44;
-  const u = 0.12 + t * (1.00 - 0.12);
+for (let i = 0; i <= 50; i++) {
+  const u = i / 50;
   COASTLINE_UV.push([Number(u.toFixed(4)), Number(getCoastlineV(u).toFixed(4))]);
 }
 
 export function isLandUV(u, v) {
-  if (u < 0.12 || u > 1.02) return false;
+  if (u < 0.00 || u > 1.02) return false;
   if (v > 1.02) return false;
   const vCoast = getCoastlineV(u);
-  // v makin besar = makin ke arah jalan (daratan)
   return v >= vCoast;
 }
 
-/**
- * Uji point in polygon 2D
- */
 export function isPointInPolygon2D(px, py, polygon) {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -167,94 +189,103 @@ export function isPointInPolygon2D(px, py, polygon) {
 }
 
 // ------------------------------------------------------------------------------
-// Konfigurasi Zona Deklaratif (Lantai & Permukaan Tapak)
+// Konfigurasi Zona Deklaratif (Berdasarkan Koordinat GPS SubAreaIpal, ParkirMotor & Shelter)
 // ------------------------------------------------------------------------------
 export const ZONES_CONFIG = [
-  // Zona D: Hamparan Tanah Merah Kiri-Bawah
+  // Zona D: Hamparan Tanah Merah Kiri-Bawah di Sisi Barat Daya SubAreaIpal (u: 0.12 s/d 0.43)
   {
     id: 'zone_tanah_merah_d',
     name: 'Tanah Merah Kiri Bawah',
     type: 'red_soil',
     uvPolygon: [
-      [0.25, 0.89],
-      [0.51, 0.89],
-      [0.51, 1.00],
-      [0.25, 1.00]
+      [0.12, 0.87],
+      [0.43, 0.87],
+      [0.43, 1.00],
+      [0.12, 1.00]
     ],
     color: 0x8d553e,
     roughness: 0.94,
     yOffset: 0.02
   },
-  // Zona E: Strip Tanah Merah Kanan-Atas (di atas kompleks gedung)
+  // Zona E: Strip Tanah Cokelat Reklamasi Utara (di atas Bak IPAL Utara)
   {
     id: 'zone_tanah_merah_e',
     name: 'Strip Tanah Cokelat Reklamasi Utara',
     type: 'reclamation_soil',
     uvPolygon: [
-      [0.52, 0.18],
+      [0.72, 0.18],
       [1.00, 0.18],
-      [1.00, 0.24],
-      [0.52, 0.24]
+      [1.00, 0.25],
+      [0.72, 0.25]
     ],
-    color: 0x8a6240, // Warna tanah reklamasi identik dengan CY
+    color: 0x8a6240,
     roughness: 0.95,
     yOffset: 0.02
   },
-  // Zona C: Padang Rumput / Semak Terbuka (Hijau muda kekuningan, pohon jarang)
+  // Zona C: Padang Rumput & Semak Terbuka di Sisi Barat Daya
   {
     id: 'zone_padang_rumput_c',
     name: 'Padang Rumput & Semak Terbuka',
     type: 'open_grassland',
     uvPolygon: [
-      [0.28, 0.55],
-      [0.55, 0.55],
-      [0.55, 0.87],
-      [0.28, 0.87]
+      [0.16, 0.78],
+      [0.42, 0.42],
+      [0.48, 0.42],
+      [0.43, 0.86],
+      [0.16, 0.86]
     ],
-    color: 0x5a7238, // Hijau muda kekuningan padang rumput alami
+    color: 0x5a7238,
     roughness: 0.92,
     yOffset: 0.012
   },
-  // Halaman / Yard Tengah (Lantai beton abu-abu)
+  // Yard SubAreaIpal (Sesuai 4 titik GPS: u in [0.433, 0.696], v in [0.669, 0.994])
   {
     id: 'zone_yard_tengah',
-    name: 'Halaman / Yard Tengah',
+    name: 'Halaman SubAreaIpal',
     type: 'concrete_yard',
     uvPolygon: [
-      [0.52, 0.68],
-      [0.78, 0.68],
-      [0.78, 0.90],
-      [0.52, 0.90]
+      [0.433, 0.669],
+      [0.696, 0.670],
+      [0.696, 0.994],
+      [0.433, 0.994]
     ],
-    color: 0x5e6569, // Beton industri abu-abu
-    roughness: 0.88,
+    color: 0x686f75,
+    roughness: 0.86,
     yOffset: 0.025
   },
-  // Jalur Perkerasan Beton Vertikal
+  // Jalan Akses Internal Aspal (antara SubAreaIpal u=0.696 dan SubAreaParkirMotor/Shelter u=0.771/0.814)
   {
     id: 'zone_jalur_perkerasan',
-    name: 'Jalur Perkerasan Beton Vertikal',
+    name: 'Jalur Jalan Akses Aspal Vertikal',
     type: 'pavement_strip',
     uvPolygon: [
-      [0.80, 0.42],
-      [0.84, 0.42],
-      [0.84, 0.97],
-      [0.80, 0.97]
+      [0.715, 0.25],
+      [0.770, 0.25],
+      [0.770, 0.442],
+      [0.838, 0.453],
+      [0.838, 0.745],
+      [0.812, 0.805],
+      [0.812, 1.00],
+      [0.715, 1.00]
     ],
-    color: 0x727a80,
-    roughness: 0.84,
+    color: 0x22262e,
+    roughness: 0.88,
     yOffset: 0.03
   },
-  // Base Kompleks Bangunan Tepi Kanan
+  // Base Pelataran SubAreaParkirMotor & SubAreaShelter (u: 0.768 s/d 0.998, v: 0.25 s/d 0.995)
   {
     id: 'zone_kompleks_bangunan_base',
-    name: 'Base Kompleks Bangunan Timur Laut',
+    name: 'Base Kompleks Parkir Motor & Shelter Timur Laut',
     type: 'facility_pavement',
     uvPolygon: [
-      [0.82, 0.24],
-      [0.99, 0.24],
-      [0.99, 0.97],
-      [0.82, 0.97]
+      [0.768, 0.25],
+      [0.998, 0.25],
+      [0.998, 0.995],
+      [0.812, 0.995],
+      [0.812, 0.805],
+      [0.838, 0.745],
+      [0.838, 0.453],
+      [0.768, 0.442]
     ],
     color: 0x545b60,
     roughness: 0.88,
@@ -263,188 +294,222 @@ export const ZONES_CONFIG = [
 ];
 
 // ------------------------------------------------------------------------------
-// Konfigurasi Bangunan Deklaratif (Kompleks Kanan & Fasilitas Yard)
-// Sesuai Deskripsi Target Citra Satelit
+// Konfigurasi Bangunan Deklaratif Terkalibrasi Presisi dengan Poligon GPS
 // ------------------------------------------------------------------------------
 export const BUILDINGS_CONFIG = [
-  // 1. Bangunan Atap Putih (Paling Atas di Kompleks Kanan)
-  {
-    id: 'bldg_north_white',
-    name: 'Bangunan Atap Putih Utara',
-    uvRect: { uMin: 0.83, uMax: 0.95, vMin: 0.335, vMax: 0.385 },
-    height: 4.6,
-    roofColor: 0xf1f5f9,
-    wallColor: 0xcfd6dc,
-    roofType: 'flat',
-    collider: true
-  },
-  // 2. Dua Deretan Atap Cokelat/Gelap Memanjang Horizontal (Barat-Timur)
-  {
-    id: 'bldg_brown_row_1',
-    name: 'Deretan Atap Cokelat 1',
-    uvRect: { uMin: 0.83, uMax: 0.97, vMin: 0.432, vMax: 0.455 },
-    height: 3.8,
-    roofColor: 0x452f23,
-    wallColor: 0x64748b,
-    roofType: 'pitched_horizontal',
-    collider: true
-  },
-  {
-    id: 'bldg_brown_row_2',
-    name: 'Deretan Atap Cokelat 2',
-    uvRect: { uMin: 0.83, uMax: 0.97, vMin: 0.465, vMax: 0.488 },
-    height: 3.8,
-    roofColor: 0x452f23,
-    wallColor: 0x64748b,
-    roofType: 'pitched_horizontal',
-    collider: true
-  },
-  // 3. Gudang Atap Seng Abu/Putih Bergaris Vertikal (3-4 Bilah Sejajar)
-  {
-    id: 'bldg_warehouse_bay_1',
-    name: 'Gudang Seng Bilah 1',
-    uvRect: { uMin: 0.865, uMax: 0.890, vMin: 0.505, vMax: 0.715 },
-    height: 6.6,
-    roofColor: 0xd8dce0,
-    wallColor: 0x94a3b8,
-    roofType: 'corrugated_vertical',
-    collider: true
-  },
-  {
-    id: 'bldg_warehouse_bay_2',
-    name: 'Gudang Seng Bilah 2',
-    uvRect: { uMin: 0.895, uMax: 0.920, vMin: 0.505, vMax: 0.715 },
-    height: 6.6,
-    roofColor: 0xe5e9ed,
-    wallColor: 0x94a3b8,
-    roofType: 'corrugated_vertical',
-    collider: true
-  },
-  {
-    id: 'bldg_warehouse_bay_3',
-    name: 'Gudang Seng Bilah 3',
-    uvRect: { uMin: 0.925, uMax: 0.950, vMin: 0.505, vMax: 0.715 },
-    height: 6.6,
-    roofColor: 0xd8dce0,
-    wallColor: 0x94a3b8,
-    roofType: 'corrugated_vertical',
-    collider: true
-  },
-  {
-    id: 'bldg_warehouse_bay_4',
-    name: 'Gudang Seng Bilah 4',
-    uvRect: { uMin: 0.955, uMax: 0.980, vMin: 0.505, vMax: 0.715 },
-    height: 6.6,
-    roofColor: 0xe5e9ed,
-    wallColor: 0x94a3b8,
-    roofType: 'corrugated_vertical',
-    collider: true
-  },
-  // 4. Bangunan Putih Besar di Ujung Bawah
-  {
-    id: 'bldg_south_white_main',
-    name: 'Bangunan Putih Besar Tenggara',
-    uvRect: { uMin: 0.84, uMax: 0.965, vMin: 0.78, vMax: 0.96 },
-    height: 5.6,
-    roofColor: 0xf8fafc,
-    wallColor: 0xe2e8f0,
-    roofType: 'pitched_subtle',
-    collider: true
-  },
-  // Bangunan Putih Lebih Kecil di Sisi Kirinya
-  {
-    id: 'bldg_south_white_annex',
-    name: 'Paviliun Putih Sisi Kiri',
-    uvRect: { uMin: 0.835, uMax: 0.88, vMin: 0.83, vMax: 0.925 },
-    height: 4.2,
-    roofColor: 0xf1f5f9,
-    wallColor: 0xe2e8f0,
-    roofType: 'flat',
-    collider: true
-  },
-
-  // ----------------------------------------------------------------------------
-  // Fasilitas Halaman / Yard di Tengah-Bawah (u 0.52-0.78, v 0.68-0.90)
-  // ----------------------------------------------------------------------------
-  // Bangunan kecil atap putih/tan di bagian atas yard
+  // ============================================================================
+  // A. FASILITAS SUB-AREA IPAL (u: 0.433 s/d 0.696, v: 0.669 s/d 0.994)
+  //    Sesuai 4 Titik GPS: -7.203719, 112.667861 s/d -7.204069, 112.668218
+  // ============================================================================
   {
     id: 'yard_bldg_whitetan',
-    name: 'Kantor Utilitas Atap Tan Yard',
-    uvRect: { uMin: 0.605, uMax: 0.638, vMin: 0.685, vMax: 0.745 },
-    height: 3.5,
-    roofColor: 0xf4eee1,
-    wallColor: 0xc4bcae,
+    name: 'Gedung Putih Atas IPAL',
+    uvRect: { uMin: 0.525, uMax: 0.578, vMin: 0.675, vMax: 0.748 },
+    height: 3.8,
+    roofColor: 0xf8fafc,
+    wallColor: 0xe2e8f0,
     roofType: 'flat',
     collider: true
   },
-  // Dua bangunan kecil atap biru di kiri
   {
     id: 'yard_shed_blue_1',
-    name: 'Shed Atap Biru 1 (Kiri Yard)',
-    uvRect: { uMin: 0.525, uMax: 0.550, vMin: 0.755, vMax: 0.788 },
+    name: 'Shed Atap Biru 1 (Kiri Atas IPAL)',
+    uvRect: { uMin: 0.442, uMax: 0.476, vMin: 0.745, vMax: 0.805 },
     height: 3.2,
-    roofColor: 0x0284c7, // Pelindo Blue
+    roofColor: 0x0284c7,
     wallColor: 0xf8fafc,
     roofType: 'flat',
     collider: true
   },
   {
     id: 'yard_shed_blue_2',
-    name: 'Shed Atap Biru 2 (Kiri Bawah Yard)',
-    uvRect: { uMin: 0.530, uMax: 0.555, vMin: 0.845, vMax: 0.878 },
+    name: 'Shed Atap Biru 2 (Kiri Bawah IPAL)',
+    uvRect: { uMin: 0.448, uMax: 0.478, vMin: 0.835, vMax: 0.902 },
     height: 3.2,
     roofColor: 0x0284c7,
     wallColor: 0xf8fafc,
     roofType: 'flat',
     collider: true
   },
-  // Dua baris kontainer / tangki silinder horizontal abu-abu terang
   {
     id: 'yard_tank_row_1',
-    name: 'Baris Tangki Silinder 1',
+    name: 'Baris Instalasi / Tangki IPAL 1',
     type: 'skid_tanks',
-    uvRect: { uMin: 0.595, uMax: 0.675, vMin: 0.775, vMax: 0.80 },
-    height: 2.3,
-    tankCount: 3,
+    uvRect: { uMin: 0.510, uMax: 0.618, vMin: 0.762, vMax: 0.795 },
+    height: 2.5,
+    tankCount: 4,
     tankColor: 0xcfd8dc,
     collider: true
   },
   {
     id: 'yard_tank_row_2',
-    name: 'Baris Tangki Silinder 2',
+    name: 'Baris Instalasi / Tangki IPAL 2',
     type: 'skid_tanks',
-    uvRect: { uMin: 0.595, uMax: 0.675, vMin: 0.815, vMax: 0.84 },
-    height: 2.3,
-    tankCount: 3,
+    uvRect: { uMin: 0.510, uMax: 0.618, vMin: 0.806, vMax: 0.838 },
+    height: 2.5,
+    tankCount: 4,
     tankColor: 0xcfd8dc,
     collider: true
   },
-  // Dua bangunan atap biru di kanan yard
   {
     id: 'yard_shed_blue_3',
-    name: 'Shed Atap Biru Kanan',
-    uvRect: { uMin: 0.708, uMax: 0.732, vMin: 0.705, vMax: 0.735 },
-    height: 3.2,
-    roofColor: 0x0284c7,
+    name: 'Gedung Memanjang Kanan IPAL',
+    uvRect: { uMin: 0.638, uMax: 0.668, vMin: 0.678, vMax: 0.885 },
+    height: 3.6,
+    roofColor: 0xcbd5e1,
     wallColor: 0xf8fafc,
     roofType: 'flat',
     collider: true
   },
-  // Bangunan putih kecil sekitar (0.76, 0.78)
   {
     id: 'yard_shed_white_small',
-    name: 'Bangunan Putih Kecil Kanan',
-    uvRect: { uMin: 0.748, uMax: 0.772, vMin: 0.765, vMax: 0.795 },
-    height: 3.0,
+    name: 'Bangunan Putih Kanan IPAL',
+    uvRect: { uMin: 0.668, uMax: 0.694, vMin: 0.745, vMax: 0.825 },
+    height: 3.4,
     roofColor: 0xf8fafc,
+    wallColor: 0xe2e8f0,
+    roofType: 'flat',
+    collider: true
+  },
+
+  // ============================================================================
+  // B. FASILITAS SUB-AREA PARKIR MOTOR & UTILITAS UTARA (6 Titik Poligon L-Shape)
+  //    u: 0.771 s/d 0.998 (v: 0.336 s/d 0.442) & u: 0.842 s/d 0.981 (v: 0.453 s/d 0.713)
+  // ============================================================================
+  // Bak Beton Kembar di Utara Parkir Motor (v: 0.258 s/d 0.312)
+  {
+    id: 'parkir_north_basin',
+    name: 'Bak Beton Kembar Utara',
+    uvRect: { uMin: 0.772, uMax: 0.935, vMin: 0.258, vMax: 0.312 },
+    height: 3.2,
+    roofColor: 0xe2e8f0,
+    wallColor: 0xcbd5e1,
+    roofType: 'flat',
+    collider: true
+  },
+  // 2 Deret Panjang Atap Cokelat Horizontal (Tepat di sayap atas L-Shape: u: 0.771 s/d 0.995, v: 0.345 s/d 0.438)
+  {
+    id: 'parkir_brown_row_1',
+    name: 'Kanopi Parkir Cokelat Horizontal 1',
+    uvRect: { uMin: 0.771, uMax: 0.992, vMin: 0.348, vMax: 0.386 },
+    height: 3.6,
+    roofColor: 0x4a3525,
+    wallColor: 0x64748b,
+    roofType: 'pitched_horizontal',
+    collider: true
+  },
+  {
+    id: 'parkir_brown_row_2',
+    name: 'Kanopi Parkir Cokelat Horizontal 2',
+    uvRect: { uMin: 0.771, uMax: 0.992, vMin: 0.398, vMax: 0.438 },
+    height: 3.6,
+    roofColor: 0x4a3525,
+    wallColor: 0x64748b,
+    roofType: 'pitched_horizontal',
+    collider: true
+  },
+  // 4 Lajur Kanopi Parkir Motor Vertikal (Tepat di batang vertikal L-Shape: u: 0.844 s/d 0.981, v: 0.455 s/d 0.712)
+  {
+    id: 'parkir_canopy_bay_1',
+    name: 'Kanopi Parkir Motor Bilah 1',
+    uvRect: { uMin: 0.844, uMax: 0.875, vMin: 0.455, vMax: 0.675 },
+    height: 4.2,
+    roofColor: 0xd8dce0,
+    wallColor: 0x94a3b8,
+    roofType: 'corrugated_vertical',
+    collider: true
+  },
+  {
+    id: 'parkir_canopy_bay_2',
+    name: 'Kanopi Parkir Motor Bilah 2',
+    uvRect: { uMin: 0.880, uMax: 0.911, vMin: 0.455, vMax: 0.675 },
+    height: 4.2,
+    roofColor: 0xe5e9ed,
+    wallColor: 0x94a3b8,
+    roofType: 'corrugated_vertical',
+    collider: true
+  },
+  {
+    id: 'parkir_canopy_bay_3',
+    name: 'Kanopi Parkir Motor Bilah 3',
+    uvRect: { uMin: 0.916, uMax: 0.947, vMin: 0.455, vMax: 0.675 },
+    height: 4.2,
+    roofColor: 0xd8dce0,
+    wallColor: 0x94a3b8,
+    roofType: 'corrugated_vertical',
+    collider: true
+  },
+  {
+    id: 'parkir_canopy_bay_4',
+    name: 'Kanopi Parkir Motor Bilah 4',
+    uvRect: { uMin: 0.952, uMax: 0.981, vMin: 0.455, vMax: 0.675 },
+    height: 4.2,
+    roofColor: 0xe5e9ed,
+    wallColor: 0x94a3b8,
+    roofType: 'corrugated_vertical',
+    collider: true
+  },
+  // Kanopi Melintang Bawah Parkir Motor (u: 0.844 s/d 0.965, v: 0.680 s/d 0.712)
+  {
+    id: 'parkir_canopy_south_bar',
+    name: 'Kanopi Parkir Motor Bawah',
+    uvRect: { uMin: 0.844, uMax: 0.965, vMin: 0.680, vMax: 0.712 },
+    height: 4.0,
+    roofColor: 0xd8dce0,
+    wallColor: 0x94a3b8,
+    roofType: 'flat',
+    collider: true
+  },
+  // 2 Bangunan / Bak Persegi di Lekukan Kiri L-Shape Parkir Motor (u: 0.785 s/d 0.835)
+  {
+    id: 'parkir_courtyard_box_1',
+    name: 'Bangunan Pendukung Parkir 1',
+    uvRect: { uMin: 0.785, uMax: 0.835, vMin: 0.472, vMax: 0.542 },
+    height: 3.4,
+    roofColor: 0xcbd5e1,
+    wallColor: 0xe2e8f0,
+    roofType: 'flat',
+    collider: true
+  },
+  {
+    id: 'parkir_courtyard_box_2',
+    name: 'Bangunan Pendukung Parkir 2',
+    uvRect: { uMin: 0.785, uMax: 0.835, vMin: 0.602, vMax: 0.668 },
+    height: 3.5,
+    roofColor: 0xe2e8f0,
+    wallColor: 0xf8fafc,
+    roofType: 'flat',
+    collider: true
+  },
+
+  // ============================================================================
+  // C. FASILITAS SUB-AREA SHELTER (8 Titik GPS Poligon Stepped L-Shape)
+  //    - Blok Utama Kiri-Bawah (Pt 4-5-6-7-8): u in [0.814, 0.934], v in [0.803, 0.995]
+  //    - Sayap Kanan-Atas (Pt 1-2-3-4-8):      u in [0.870, 0.992], v in [0.751, 0.910]
+  // ============================================================================
+  {
+    id: 'bldg_south_white_main',
+    name: 'Gedung Utama Shelter Putih (Sisi Jalan)',
+    uvRect: { uMin: 0.814, uMax: 0.934, vMin: 0.805, vMax: 0.995 },
+    height: 6.0,
+    roofColor: 0xf8fafc,
+    wallColor: 0xe2e8f0,
+    roofType: 'pitched_subtle',
+    collider: true
+  },
+  {
+    id: 'bldg_south_white_annex',
+    name: 'Sayap Timur Laut Gedung Shelter Putih',
+    uvRect: { uMin: 0.870, uMax: 0.992, vMin: 0.751, vMax: 0.910 },
+    height: 5.0,
+    roofColor: 0xf1f5f9,
     wallColor: 0xe2e8f0,
     roofType: 'flat',
     collider: true
   }
 ];
 
-// Helper untuk kompatibilitas pengecekan exclusion pohon
-export function isPointInsideBuildingUV(u, v, margin = 0.015) {
+export function isPointInsideBuildingUV(u, v, margin = 0.012) {
   for (const b of BUILDINGS_CONFIG) {
     const r = b.uvRect;
     if (
