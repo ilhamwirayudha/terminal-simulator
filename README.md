@@ -1,13 +1,6 @@
 # Terminal Teluk Lamong (TTL) 3D Operation Simulator
 
-Simulator web 3D interaktif berbasis Three.js dan Vite yang mereplika kawasan Terminal Teluk Lamong, Surabaya (PT Pelindo), dalam skala metrik 1:1 berdasarkan koordinat GPS nyata.
-
-## Dokumentasi Proyek
-
-Untuk menghindari duplikasi, detail spesifikasi dan arsitektur dipisah pada dokumen berikut:
-
-* **[docs/prd.md](docs/prd.md)** — *Product Requirements Document* (overview produk, tujuan, target pengguna, fitur inti, *user flow*, kebutuhan fungsional/non-fungsional, ruang lingkup, dan kriteria keberhasilan).
-* **[docs/Assets.md](docs/Assets.md)** — Standar arsitektur kode, struktur direktori `src/`, serta spesifikasi aset 3D (alat berat STS/ASC/RTG, armada truk, kontainer ISO, bangunan, infrastruktur, dan lingkungan).
+Simulator web 3D interaktif berbasis Three.js dan Vite yang mereplika kawasan Terminal Teluk Lamong, Surabaya (PT Pelindo), dalam skala metrik 1:1 
 
 ## Stack Teknologi
 
