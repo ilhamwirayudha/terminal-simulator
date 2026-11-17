@@ -69,10 +69,10 @@ export function createSubAreaLahanDanJalanKantor() {
   const mainMidX = (xRoadCurb + xOuterCoastMin) / 2;
 
   const mainLandSlab = new THREE.Mesh(
-    new THREE.BoxGeometry(mainDepthX, 0.5, mainLenZ),
+    new THREE.BoxGeometry(mainDepthX, yGround + 0.2, mainLenZ),
     mudflatSoilMat
   );
-  mainLandSlab.position.set(mainMidX, yGround - 0.25, mainMidZ);
+  mainLandSlab.position.set(mainMidX, (yGround - 0.2) / 2, mainMidZ);
   mainLandSlab.receiveShadow = true;
   group.add(mainLandSlab);
 
@@ -83,10 +83,10 @@ export function createSubAreaLahanDanJalanKantor() {
   const bulgeMidX = (swBulge.xMax + swBulge.xMin) / 2;
 
   const bulgeSlab = new THREE.Mesh(
-    new THREE.BoxGeometry(bulgeDepthX, 0.5, bulgeLenZ),
+    new THREE.BoxGeometry(bulgeDepthX, yGround + 0.2, bulgeLenZ),
     mudflatSoilMat
   );
-  bulgeSlab.position.set(bulgeMidX, yGround - 0.25, bulgeMidZ);
+  bulgeSlab.position.set(bulgeMidX, (yGround - 0.2) / 2, bulgeMidZ);
   bulgeSlab.receiveShadow = true;
   group.add(bulgeSlab);
 

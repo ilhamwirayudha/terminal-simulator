@@ -18,7 +18,6 @@ export function createSubAreaMangrovePesisir() {
 
   const yGround = 1.55;
   const yMud = 1.05;
-  const yWater = 0.85;
 
   const { zMin, zMax } = CY_WAITING_BOUNDS;
   const lenZ = zMax - zMin;
@@ -33,10 +32,10 @@ export function createSubAreaMangrovePesisir() {
     metalness: 0.05
   });
 
-  const soilGeo = new THREE.PlaneGeometry(10.0, lenZ);
+  const soilH = yGround + 0.01 + 0.2;
+  const soilGeo = new THREE.BoxGeometry(10.0, soilH, lenZ);
   const soilMesh = new THREE.Mesh(soilGeo, soilMat);
-  soilMesh.rotation.x = -Math.PI / 2;
-  soilMesh.position.set(141.0, yGround + 0.01, midZ);
+  soilMesh.position.set(141.0, yGround + 0.01 - soilH / 2, midZ);
   soilMesh.receiveShadow = true;
   coastalGroup.add(soilMesh);
 
@@ -49,27 +48,12 @@ export function createSubAreaMangrovePesisir() {
     metalness: 0.04
   });
 
-  const mudGeo = new THREE.PlaneGeometry(30.0, lenZ + 10.0);
+  const mudH = yMud + 0.2;
+  const mudGeo = new THREE.BoxGeometry(30.0, mudH, lenZ + 10.0);
   const mudMesh = new THREE.Mesh(mudGeo, mudMat);
-  mudMesh.rotation.x = -Math.PI / 2;
-  mudMesh.position.set(161.0, yMud, midZ);
+  mudMesh.position.set(161.0, yMud - mudH / 2, midZ);
   mudMesh.receiveShadow = true;
   coastalGroup.add(mudMesh);
-
-  // ----------------------------------------------------------------------------
-  // 3. Permukaan Air Laut Tenang (Water Plane) (X: 175 - 230)
-  // ----------------------------------------------------------------------------
-  const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x476359, // Air muara kehijauan estuari Teluk Lamong
-    roughness: 0.25,
-    metalness: 0.45
-  });
-
-  const waterGeo = new THREE.PlaneGeometry(60.0, lenZ + 40.0);
-  const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-  waterMesh.rotation.x = -Math.PI / 2;
-  waterMesh.position.set(205.0, yWater, midZ);
-  coastalGroup.add(waterMesh);
 
   // ----------------------------------------------------------------------------
   // 4. Sabuk Hutan Mangrove Rapat (InstancedMesh)

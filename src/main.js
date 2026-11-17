@@ -3,6 +3,7 @@ import './style.css';
 import { createScene } from './world/scene.js';
 import { setupLights } from './world/lights.js';
 import { createEnvironment } from './world/environment.js';
+import { createOcean } from './assets/nature/createOcean.js';
 import { createHighwaySignage } from './world/Signage.js';
 import { createAreaJalan } from './terminal/jalan/index.js';
 import { createBufferArea } from './terminal/bufferArea/index.js';
@@ -37,6 +38,9 @@ const { scene, camera, renderer, controls } = createScene(canvas);
 setupLights(scene);
 
 // 2. Build 3D World Environment & Terminal Facilities
+const oceanGroup = createOcean({ skyColor: 0xb9daf8 });
+scene.add(oceanGroup);
+
 const mainlandEnvGroup = createEnvironment(scene);
 mainlandEnvGroup.position.z = -55.0;
 
@@ -256,13 +260,16 @@ inputTeleport?.addEventListener('keydown', (e) => {
 
 // 7. Animation Loop
 const clock = new THREE.Clock();
+let oceanElapsed = 0;
 
 function animate() {
   requestAnimationFrame(animate);
 
   const realDelta = clock.getDelta();
+  oceanElapsed += Math.min(realDelta, 0.1);
   simClock.update(realDelta);
 
+  oceanGroup.userData.update?.(oceanElapsed);
   cameraManager.update(realDelta);
   updateGpsTelemetry();
   compassWidget.update();

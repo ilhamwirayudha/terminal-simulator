@@ -127,12 +127,69 @@ export const yellowLineMat = new THREE.MeshBasicMaterial({
 });
 
 
-// 6. Air Laut Teluk (Shared)
+// 6. Air Laut Teluk & Tanggul Pesisir (Shared)
 export const seaWaterMat = new THREE.MeshStandardMaterial({
-  color: 0x6e7d73,
-  roughness: 0.28,
-  metalness: 0.18,
-  transparent: true,
-  opacity: 0.94,
+  color: 0x1360a3,
+  roughness: 0.22,
+  metalness: 0.14,
   name: 'mat_sea_water'
 });
+
+export const coastalEmbankmentMat = new THREE.MeshStandardMaterial({
+  color: 0x43533a,
+  roughness: 0.94,
+  metalness: 0.03,
+  name: 'mat_coastal_embankment'
+});
+
+/**
+ * Membangun BufferGeometry tanggul jalur koridor tanpa triangulasi earcut & tanpa
+ * sisi bawah yang tak pernah terlihat, sekaligus menggabungkan beberapa strip
+ * ke dalam 1 draw call.
+ *
+ * @param {Array<Array<{xLeft: number, xRight: number, z: number}>>} bands
+ * @param {number} topY
+ * @param {number} bottomY
+ */
+export function createEmbankmentGeometry(bands, topY = 1.591, bottomY = -0.2) {
+  const positions = [];
+  const pushTri = (ax, ay, az, bx, by, bz, cx, cy, cz) => {
+    positions.push(ax, ay, az, bx, by, bz, cx, cy, cz);
+  };
+
+  bands.forEach((pts) => {
+    if (!pts || pts.length < 2) return;
+
+    // Tutup ujung awal (-Z)
+    const pStart = pts[0];
+    pushTri(pStart.xLeft, topY, pStart.z, pStart.xLeft, bottomY, pStart.z, pStart.xRight, bottomY, pStart.z);
+    pushTri(pStart.xLeft, topY, pStart.z, pStart.xRight, bottomY, pStart.z, pStart.xRight, topY, pStart.z);
+
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i];
+      const p1 = pts[i + 1];
+
+      // Permukaan atas (+Y)
+      pushTri(p0.xLeft, topY, p0.z, p0.xRight, topY, p0.z, p1.xRight, topY, p1.z);
+      pushTri(p0.xLeft, topY, p0.z, p1.xRight, topY, p1.z, p1.xLeft, topY, p1.z);
+
+      // Dinding sisi kiri (+X / NW)
+      pushTri(p0.xLeft, topY, p0.z, p1.xLeft, topY, p1.z, p1.xLeft, bottomY, p1.z);
+      pushTri(p0.xLeft, topY, p0.z, p1.xLeft, bottomY, p1.z, p0.xLeft, bottomY, p0.z);
+
+      // Dinding sisi kanan (-X / SE)
+      pushTri(p0.xRight, topY, p0.z, p0.xRight, bottomY, p0.z, p1.xRight, bottomY, p1.z);
+      pushTri(p0.xRight, topY, p0.z, p1.xRight, bottomY, p1.z, p1.xRight, topY, p1.z);
+    }
+
+    // Tutup ujung akhir (+Z)
+    const pEnd = pts[pts.length - 1];
+    pushTri(pEnd.xLeft, topY, pEnd.z, pEnd.xRight, topY, pEnd.z, pEnd.xRight, bottomY, pEnd.z);
+    pushTri(pEnd.xLeft, topY, pEnd.z, pEnd.xRight, bottomY, pEnd.z, pEnd.xLeft, bottomY, pEnd.z);
+  });
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.computeVertexNormals();
+  return geo;
+}

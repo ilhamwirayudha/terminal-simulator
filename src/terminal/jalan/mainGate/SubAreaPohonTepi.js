@@ -62,11 +62,11 @@ export function createSubAreaPohonTepi() {
     metalness: 0.05
   });
 
-  const soilGeo = new THREE.PlaneGeometry(16.0, 105.0);
+  const soilH = yRoad - 0.02 + 0.2;
+  const soilGeo = new THREE.BoxGeometry(16.0, soilH, 105.0);
   const soilMesh = new THREE.Mesh(soilGeo, soilMat);
-  soilMesh.rotation.x = -Math.PI / 2;
   const edgeSoilMid = getRoadEdgesAtS(327.5);
-  soilMesh.position.set(edgeSoilMid.tSE - 8.0, yRoad - 0.02, z0 + 327.5);
+  soilMesh.position.set(edgeSoilMid.tSE - 8.0, (yRoad - 0.02 - 0.2) / 2, z0 + 327.5);
   soilMesh.receiveShadow = true;
   treeGroup.add(soilMesh);
 

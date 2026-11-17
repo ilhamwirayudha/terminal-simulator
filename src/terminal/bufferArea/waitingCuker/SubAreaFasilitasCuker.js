@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { SOUTHWEST_BARRIER_CONFIG, CUKER_BOUNDS } from './GeoCuker.js';
-import { seaWaterMat } from '../../../assets/materials/roadMaterials.js';
 
 /**
  * ==============================================================================
@@ -25,7 +24,6 @@ export function createSubAreaFasilitasCuker() {
 
   const yGround = 1.565;
   const yMud = 1.05;
-  const yWater = 0.85;
 
   const zEndAsphalt = CUKER_BOUNDS.zAsphaltMax; // 1145.0m
   const zEndSoil = CUKER_BOUNDS.zBufferMax;     // 1159.0m
@@ -315,27 +313,15 @@ export function createSubAreaFasilitasCuker() {
   mudShape.lineTo(146.0, -zFenceNE);
   mudShape.closePath();
 
-  const mudGeo = new THREE.ShapeGeometry(mudShape);
+  const mudGeo = new THREE.ExtrudeGeometry(mudShape, {
+    depth: yMud + 0.2,
+    bevelEnabled: false
+  });
   const mudMesh = new THREE.Mesh(mudGeo, mudMat);
   mudMesh.rotation.x = -Math.PI / 2;
-  mudMesh.position.set(0, yMud, 0);
+  mudMesh.position.set(0, -0.2, 0);
   mudMesh.receiveShadow = true;
   facGroup.add(mudMesh);
-
-  const waterShape = new THREE.Shape();
-  waterShape.moveTo(175.0, -1030.0);
-  waterShape.lineTo(235.0, -1030.0);
-  waterShape.lineTo(235.0, -1245.0);
-  waterShape.lineTo(15.0, -1245.0);
-  waterShape.lineTo(15.0, -1192.0);
-  waterShape.lineTo(175.0, -1192.0);
-  waterShape.closePath();
-
-  const waterGeo = new THREE.ShapeGeometry(waterShape);
-  const waterMesh = new THREE.Mesh(waterGeo, seaWaterMat);
-  waterMesh.rotation.x = -Math.PI / 2;
-  waterMesh.position.set(0, yWater, 0);
-  facGroup.add(waterMesh);
 
   const trunkGeo = new THREE.CylinderGeometry(0.2, 0.45, 2.5, 6);
   const foliageGeo = new THREE.DodecahedronGeometry(2.0, 1);

@@ -5,7 +5,8 @@ import {
   curbHazardWhiteMat,
   curbHazardBlackMat,
   whiteLineMat,
-  yellowLineMat
+  yellowLineMat,
+  createEmbankmentGeometry
 } from '../../assets/materials/roadMaterials.js';
 import { createMedianIsland } from '../../assets/infrastructure/createMedianIsland.js';
 import { createMedianTree } from '../../assets/nature/createMedianTree.js';
@@ -172,6 +173,23 @@ export function createJalanPreGate() {
   const flareMesh = new THREE.Mesh(flareGeo, portRoadPavementMat);
   flareMesh.receiveShadow = true;
   preGateGroup.add(flareMesh);
+
+  // Pondasi tanggul padat di bawah transisi pelebaran agar tidak menggantung di atas laut
+  const flareSamples = [];
+  for (let i = 0; i <= 12; i++) {
+    const z = 570 + (i / 12) * 35;
+    flareSamples.push({
+      xLeft: getInboundEdgeTrans(z),
+      xRight: getOutboundEdgeTrans(z),
+      z
+    });
+  }
+  const flareBaseMesh = new THREE.Mesh(
+    createEmbankmentGeometry([flareSamples], yRoad - 0.04, -0.2),
+    seawallMat
+  );
+  flareBaseMesh.receiveShadow = true;
+  preGateGroup.add(flareBaseMesh);
 
   // Kanstin Transisi Awal
   for (let i = 0; i < 15; i++) {

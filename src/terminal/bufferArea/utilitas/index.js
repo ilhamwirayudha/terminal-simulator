@@ -59,19 +59,20 @@ export function createUtilitasArea(scene = null) {
   groundShape.lineTo(ptNE.x, -ptNE.z);
 
   // Sisi kanstin tepi jalan dari Z=775 mundur ke abutmen Z=570 mengikuti transisi jalan
-  for (let u = 1.00; u >= 0.00; u -= 0.04) {
+  for (let i = 24; i >= 0; i--) {
+    const u = i / 25;
     const pt = uvToWorld(u, 1.00);
     groundShape.lineTo(pt.x, -pt.z);
   }
-  const ptSE = uvToWorld(0.00, 1.00);
-  groundShape.lineTo(ptSE.x, -ptSE.z);
-  groundShape.lineTo(coastlineWorldPts[0].x, -coastlineWorldPts[0].z);
   groundShape.closePath();
 
-  const groundGeo = new THREE.ShapeGeometry(groundShape);
+  const groundGeo = new THREE.ExtrudeGeometry(groundShape, {
+    depth: yGround + 0.2,
+    bevelEnabled: false
+  });
   const groundMesh = new THREE.Mesh(groundGeo, groundBaseMat);
   groundMesh.rotation.x = -Math.PI / 2;
-  groundMesh.position.set(0, yGround, 0);
+  groundMesh.position.set(0, -0.2, 0);
   groundMesh.receiveShadow = true;
   groundMesh.name = 'area_a_ground_base';
   utilitasGroup.add(groundMesh);

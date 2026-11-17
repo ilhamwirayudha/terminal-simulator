@@ -127,6 +127,7 @@ export class SelectionManager {
     });
 
     this.canvas.addEventListener('pointermove', (e) => {
+      if (e.buttons !== 0) return;
       this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
       this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
       this._updateHover();

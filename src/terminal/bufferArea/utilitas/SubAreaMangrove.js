@@ -22,52 +22,11 @@ export function createSubAreaMangrove() {
   const mangroveGroup = new THREE.Group();
   mangroveGroup.name = 'subarea_mangrove_vegetasi';
 
-  const yWater = 0.85;
   const yMud = 1.05;
   const yGround = 1.55;
 
   // ----------------------------------------------------------------------------
-  // 1. Bidang Permukaan Air Laut Tenang (Water Plane) di y = 0.85
-  // Menyatu seamless di Z = 775 dengan water mesh cyWaitingArea (X: 175 - 235)
-  // dan melingkupi teluk luar sisi barat daya hingga abutmen jembatan.
-  // ----------------------------------------------------------------------------
-  const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x476359, // Air muara kehijauan estuari Teluk Lamong (identik CY)
-    roughness: 0.25,
-    metalness: 0.45
-  });
-
-  const waterShape = new THREE.Shape();
-  // Titik awal seam Z = 775 pada garis pantai X = 175.0
-  waterShape.moveTo(175.0, -775.0);
-  waterShape.lineTo(235.0, -775.0); // Lebar 60m persis menyambung water CY
-  waterShape.lineTo(235.0, -650.0); // Koridor laut utara
-  waterShape.lineTo(190.0, -530.0); // Teluk luar barat laut
-  waterShape.lineTo(-30.0, -530.0); // Perairan lepas sisi barat
-  waterShape.lineTo(-30.0, -570.0); // Sisi barat abutmen (Z = 570)
-
-  // Hubungkan ke abutmen jembatan (u = 0.00)
-  const ptAbut = uvToWorld(0.00, getCoastlineV(0.00));
-  waterShape.lineTo(ptAbut.x, -ptAbut.z);
-
-  // Telusuri garis pantai dari abutmen naik ke perbatasan Z = 775
-  const waterCoastSteps = 44;
-  for (let i = 1; i <= waterCoastSteps; i++) {
-    const u = i / waterCoastSteps;
-    const w = uvToWorld(u, getCoastlineV(u));
-    waterShape.lineTo(w.x, -w.z);
-  }
-  waterShape.closePath();
-
-  const waterGeo = new THREE.ShapeGeometry(waterShape);
-  const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-  waterMesh.rotation.x = -Math.PI / 2;
-  waterMesh.position.set(0, yWater, 0);
-  waterMesh.name = 'area_a_water_plane';
-  mangroveGroup.add(waterMesh);
-
-  // ----------------------------------------------------------------------------
-  // 2. Zona Lumpur Pasang Surut Pesisir (Intertidal Mudflat) di y = 1.05
+  // 1. Zona Lumpur Pasang Surut Pesisir (Intertidal Mudflat) di y = 1.05 -> -0.20
   // Menyambung seamless di Z = 775 dengan mudflat CY (X: 146 - 176)
   // ----------------------------------------------------------------------------
   const mudflatMat = new THREE.MeshStandardMaterial({
@@ -109,10 +68,14 @@ export function createSubAreaMangrove() {
   }
   mudflatShape.closePath();
 
-  const mudflatGeo = new THREE.ShapeGeometry(mudflatShape);
+  const mudDepth = yMud + 0.2;
+  const mudflatGeo = new THREE.ExtrudeGeometry(mudflatShape, {
+    depth: mudDepth,
+    bevelEnabled: false
+  });
   const mudflatMesh = new THREE.Mesh(mudflatGeo, mudflatMat);
   mudflatMesh.rotation.x = -Math.PI / 2;
-  mudflatMesh.position.set(0, yMud, 0);
+  mudflatMesh.position.set(0, -0.2, 0);
   mudflatMesh.receiveShadow = true;
   mudflatMesh.name = 'area_a_mudflat';
   mangroveGroup.add(mudflatMesh);

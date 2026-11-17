@@ -59,10 +59,13 @@ export function createSubAreaPerkerasanCuker() {
   // Menutup kembali ke titik awal di batas barat daya (X = 16.9, Z = 1034.4)
   shape.closePath();
 
-  const mainPavementGeo = new THREE.ShapeGeometry(shape);
+  const mainPavementGeo = new THREE.ExtrudeGeometry(shape, {
+    depth: yBase + 0.2,
+    bevelEnabled: false
+  });
   const mainPavementMesh = new THREE.Mesh(mainPavementGeo, cyPavementMat);
   mainPavementMesh.rotation.x = -Math.PI / 2;
-  mainPavementMesh.position.set(0, yBase, 0);
+  mainPavementMesh.position.set(0, -0.2, 0);
   mainPavementMesh.receiveShadow = true;
   pavementGroup.add(mainPavementMesh);
 
@@ -77,13 +80,15 @@ export function createSubAreaPerkerasanCuker() {
   soilShape.lineTo(18.5, -zEndSoil);
   soilShape.lineTo(18.5, -zEndAsphalt);
   soilShape.lineTo(136.0, -zEndAsphalt);
-  soilShape.lineTo(136.0, -1034.4);
   soilShape.closePath();
 
-  const soilGeo = new THREE.ShapeGeometry(soilShape);
+  const soilGeo = new THREE.ExtrudeGeometry(soilShape, {
+    depth: yBase - 0.005 + 0.2,
+    bevelEnabled: false
+  });
   const soilMesh = new THREE.Mesh(soilGeo, reclamationSoilMat);
   soilMesh.rotation.x = -Math.PI / 2;
-  soilMesh.position.set(0, yBase - 0.005, 0);
+  soilMesh.position.set(0, -0.2, 0);
   soilMesh.receiveShadow = true;
   pavementGroup.add(soilMesh);
 

@@ -58,10 +58,13 @@ export function createSubAreaAksesJalan() {
   shape.lineTo(13.3, -775.0);
   shape.closePath();
 
-  const mainPavementGeo = new THREE.ShapeGeometry(shape);
+  const mainPavementGeo = new THREE.ExtrudeGeometry(shape, {
+    depth: yBase + 0.2,
+    bevelEnabled: false
+  });
   const mainPavementMesh = new THREE.Mesh(mainPavementGeo, cyPavementMat);
   mainPavementMesh.rotation.x = -Math.PI / 2;
-  mainPavementMesh.position.set(0, yBase, 0);
+  mainPavementMesh.position.set(0, -0.2, 0);
   mainPavementMesh.receiveShadow = true;
   roadGroup.add(mainPavementMesh);
 

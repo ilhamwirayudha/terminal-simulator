@@ -17,7 +17,7 @@ export function createScene(canvas) {
     45,
     window.innerWidth / window.innerHeight,
     0.05, // 5cm near plane: prevents surface clipping
-    6500
+    16000
   );
   camera.position.set(-210, 440, 320);
   camera.lookAt(-50, 10, 1750);

@@ -3,7 +3,9 @@ import {
   portRoadPavementMat,
   curbHazardWhiteMat,
   whiteLineMat,
-  yellowLineMat
+  yellowLineMat,
+  coastalEmbankmentMat,
+  createEmbankmentGeometry
 } from '../../../assets/materials/roadMaterials.js';
 import { createMedianIsland } from '../../../assets/infrastructure/createMedianIsland.js';
 import { FRAME, MEDIAN, getRoadEdgesAtS, MAIN_GATE_CONFIG } from './GeoMainGate.js';
@@ -52,6 +54,31 @@ export function createSubAreaJalanMainGate() {
   const roadMesh = new THREE.Mesh(roadGeo, portRoadPavementMat);
   roadMesh.receiveShadow = true;
   roadGroup.add(roadMesh);
+
+  // 1B. Tanggul Tanah Reklamasi Penopang Jalan & Sabuk Pohon Main Gate (-0.20m s/d 1.591m)
+  const shoulderMarginAtS = (s) => {
+    if (s <= 495.0) return 12.2;
+    const t = Math.min(1.0, (s - 495.0) / 36.0);
+    return 12.2 + t * (9.0 - 12.2);
+  };
+  const embankSteps = 44;
+  const embankSamples = [];
+  for (let i = 0; i <= embankSteps; i++) {
+    const s = (i / embankSteps) * totalLength;
+    const edge = getRoadEdgesAtS(s);
+    const margin = shoulderMarginAtS(s);
+    embankSamples.push({
+      xLeft: edge.tNW + margin,
+      xRight: edge.tSE - margin,
+      z: edge.z
+    });
+  }
+  const embankMesh = new THREE.Mesh(
+    createEmbankmentGeometry([embankSamples], yRoad - 0.04, -0.2),
+    coastalEmbankmentMat
+  );
+  embankMesh.receiveShadow = true;
+  roadGroup.add(embankMesh);
 
   // 2. Kanstin Tepi Luar Jalan (Curbs: NW & SE)
   for (let i = 0; i < numSteps; i++) {

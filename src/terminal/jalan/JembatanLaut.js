@@ -6,8 +6,7 @@ import {
   barrierMat,
   whiteLineMat,
   yellowLineMat,
-  seawallMat,
-  seaWaterMat
+  seawallMat
 } from '../../assets/materials/roadMaterials.js';
 
 /**
@@ -242,13 +241,6 @@ export function createJembatanLaut() {
     bridgeGroup.add(columnMesh);
     bridgeGroup.add(collarMesh);
   }
-
-  // Hamparan Permukaan Air Laut Teluk (Shared Material)
-  const seaWater = new THREE.Mesh(new THREE.PlaneGeometry(3600, 3600), seaWaterMat);
-  seaWater.rotation.x = -Math.PI / 2;
-  seaWater.position.set(0, 0.0, 1150);
-  seaWater.receiveShadow = true;
-  bridgeGroup.add(seaWater);
 
   return bridgeGroup;
 }

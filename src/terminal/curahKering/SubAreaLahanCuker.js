@@ -92,22 +92,24 @@ export function createSubAreaLahanCuker() {
   const oruMidZ = (zMin + zOruEnd) / 2;
 
   // 1A. Perkerasan Aspal Bawah-Tengah ORU (X: 21.4 s/d 246.0)
+  const cukerSlabH = yPavement + 0.20;
+  const cukerSlabCenterY = (yPavement - 0.20) / 2;
   const oruAsphaltLenX = ORU_CONFIG.xAsphaltMax - xRoadEdge;
   const oruAsphaltMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(oruAsphaltLenX, 0.30, oruWidthZ),
+    new THREE.BoxGeometry(oruAsphaltLenX, cukerSlabH, oruWidthZ),
     oruAsphaltMat
   );
-  oruAsphaltMesh.position.set(xRoadEdge + oruAsphaltLenX / 2, yPavement - 0.15, oruMidZ);
+  oruAsphaltMesh.position.set(xRoadEdge + oruAsphaltLenX / 2, cukerSlabCenterY, oruMidZ);
   oruAsphaltMesh.receiveShadow = true;
   lahanGroup.add(oruAsphaltMesh);
 
   // 1B. Lahan Tanah Cokelat Atas ORU (X: 246.0 s/d 363.2)
   const oruSoilLenX = xOuterNW - ORU_CONFIG.xAsphaltMax;
   const oruSoilMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(oruSoilLenX, 0.30, oruWidthZ),
+    new THREE.BoxGeometry(oruSoilLenX, cukerSlabH, oruWidthZ),
     oruUpperSoilMat
   );
-  oruSoilMesh.position.set(ORU_CONFIG.xAsphaltMax + oruSoilLenX / 2, yPavement - 0.15, oruMidZ);
+  oruSoilMesh.position.set(ORU_CONFIG.xAsphaltMax + oruSoilLenX / 2, cukerSlabCenterY, oruMidZ);
   oruSoilMesh.receiveShadow = true;
   lahanGroup.add(oruSoilMesh);
 
@@ -117,10 +119,10 @@ export function createSubAreaLahanCuker() {
   const midWidthZ = zMidEnd - zOruEnd; // 58.5m
   const midCenterZ = (zOruEnd + zMidEnd) / 2;
   const midSlabMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(widthX, 0.30, midWidthZ),
+    new THREE.BoxGeometry(widthX, cukerSlabH, midWidthZ),
     midLimestoneMat
   );
-  midSlabMesh.position.set(midX, yPavement - 0.15, midCenterZ);
+  midSlabMesh.position.set(midX, cukerSlabCenterY, midCenterZ);
   midSlabMesh.receiveShadow = true;
   lahanGroup.add(midSlabMesh);
 
@@ -130,10 +132,10 @@ export function createSubAreaLahanCuker() {
   const bulkWidthZ = zMax - zMidEnd; // 223.0m
   const bulkCenterZ = (zMidEnd + zMax) / 2;
   const bulkSlabMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(widthX, 0.30, bulkWidthZ),
+    new THREE.BoxGeometry(widthX, cukerSlabH, bulkWidthZ),
     bulkConcreteMat
   );
-  bulkSlabMesh.position.set(midX, yPavement - 0.15, bulkCenterZ);
+  bulkSlabMesh.position.set(midX, cukerSlabCenterY, bulkCenterZ);
   bulkSlabMesh.receiveShadow = true;
   lahanGroup.add(bulkSlabMesh);
 
@@ -198,12 +200,12 @@ export function createSubAreaLahanCuker() {
   coastShape.closePath();
 
   const coastGeo = new THREE.ExtrudeGeometry(coastShape, {
-    depth: 0.28,
+    depth: ySoil + 0.20,
     bevelEnabled: false
   });
   const coastMesh = new THREE.Mesh(coastGeo, coastalSoilMat);
   coastMesh.rotation.x = -Math.PI / 2;
-  coastMesh.position.set(0, ySoil - 0.28, 0);
+  coastMesh.position.set(0, -0.20, 0);
   coastMesh.receiveShadow = true;
   lahanGroup.add(coastMesh);
 

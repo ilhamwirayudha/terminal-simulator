@@ -38,10 +38,10 @@ export function createKantorArea(scene) {
   const stripLenZ = 1168.0 - 774.0;
   const stripMidZ = (774.0 + 1168.0) / 2;
   const stripGround = new THREE.Mesh(
-    new THREE.BoxGeometry(11.0, 0.45, stripLenZ),
+    new THREE.BoxGeometry(11.0, 1.805, stripLenZ),
     new THREE.MeshStandardMaterial({ color: 0x3b4d34, roughness: 0.94 })
   );
-  stripGround.position.set(-18.8, 1.38, stripMidZ);
+  stripGround.position.set(-18.8, 0.7025, stripMidZ);
   stripGround.receiveShadow = true;
   kantorGroup.add(stripGround);
 

@@ -69,10 +69,11 @@ export function createSubAreaLahanCY() {
     roughness: 0.92
   });
 
-  // 1. Slab Utama Lahan Beton CY (654.7m x 642.1m)
-  const mainSlabGeo = new THREE.BoxGeometry(widthX, 0.30, lengthZ);
+  // 1. Slab Utama Lahan Beton CY (654.7m x 642.1m, anchor ke dasar laut -0.20m)
+  const mainSlabH = yPavement + 0.20;
+  const mainSlabGeo = new THREE.BoxGeometry(widthX, mainSlabH, lengthZ);
   const mainSlabMesh = new THREE.Mesh(mainSlabGeo, cyConcreteMat);
-  mainSlabMesh.position.set(midX, yPavement - 0.15, midZ);
+  mainSlabMesh.position.set(midX, (yPavement - 0.20) / 2, midZ);
   mainSlabMesh.receiveShadow = true;
   lahanGroup.add(mainSlabMesh);
 
@@ -81,9 +82,10 @@ export function createSubAreaLahanCY() {
   const totalSoilLenZ = lengthZ + coastalBeltWidth * 2;
   const soilCenterX = xRoadEdge - totalSoilWidthX / 2;
 
-  const soilSlabGeo = new THREE.BoxGeometry(totalSoilWidthX, 0.28, totalSoilLenZ);
+  const soilSlabH = ySoil + 0.20;
+  const soilSlabGeo = new THREE.BoxGeometry(totalSoilWidthX, soilSlabH, totalSoilLenZ);
   const soilSlabMesh = new THREE.Mesh(soilSlabGeo, coastalSoilMat);
-  soilSlabMesh.position.set(soilCenterX, ySoil - 0.14, midZ);
+  soilSlabMesh.position.set(soilCenterX, (ySoil - 0.20) / 2, midZ);
   soilSlabMesh.receiveShadow = true;
   lahanGroup.add(soilSlabMesh);
 

@@ -3,7 +3,9 @@ import {
   portRoadPavementMat,
   curbHazardWhiteMat,
   whiteLineMat,
-  yellowLineMat
+  yellowLineMat,
+  coastalEmbankmentMat,
+  createEmbankmentGeometry
 } from '../../../assets/materials/roadMaterials.js';
 import {
   PASCA_FRAME,
@@ -58,6 +60,30 @@ export function createSubAreaJalanPascaGate() {
   const roadMesh = new THREE.Mesh(roadGeo, portRoadPavementMat);
   roadMesh.receiveShadow = true;
   roadGroup.add(roadMesh);
+
+  // 1B. Tanggul Penopang Koridor Jalan & Sabuk Pohon Pasca-Gate (1 Draw Call Terpadu)
+  const sampleBand = (sFrom, sTo, steps, getLeftX, getRightX) => {
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const s = sFrom + (i / steps) * (sTo - sFrom);
+      const edge = getPascaRoadEdgesAtS(s);
+      pts.push({ xLeft: getLeftX(edge), xRight: getRightX(edge), z: edge.z });
+    }
+    return pts;
+  };
+
+  const pascaEmbankGeo = createEmbankmentGeometry(
+    [
+      sampleBand(sStart, sEnd, 36, (e) => e.tNW, (e) => e.tSE),
+      sampleBand(sStart, 932.0, 20, (e) => e.tNW + 9.0, (e) => e.tNW),
+      sampleBand(sStart, 651.0, 10, (e) => e.tSE, (e) => e.tSE - 9.0)
+    ],
+    yRoad - 0.04,
+    -0.2
+  );
+  const pascaEmbankMesh = new THREE.Mesh(pascaEmbankGeo, coastalEmbankmentMat);
+  pascaEmbankMesh.receiveShadow = true;
+  roadGroup.add(pascaEmbankMesh);
 
   // 2. Kanstin Tepi Luar Jalan (NW & SE)
   for (let i = 0; i < numSteps; i++) {
